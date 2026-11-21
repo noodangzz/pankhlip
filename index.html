@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ปั่นคลิปมินิมอล</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sriracha&family=Mali:wght@500;700&family=Itim&family=Kanit:wght@400;600&family=Mitr:wght@400;600&family=Prompt:wght@400;600&family=Charm:wght@700&family=Chonburi&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f6f2ec;--card:#fffdf9;--ink:#3b332b;--mute:#8a7f73;--line:#e7dfd4;--acc:#b98a5e;--acc2:#7a5a3c;--ok:#5f8f62;--bad:#b4533f}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Thai",system-ui,sans-serif;font-size:16px;line-height:1.55}
+.wrap{max-width:880px;margin:0 auto;padding:18px 14px 120px}
+h1{font-family:"Mitr";font-weight:600;font-size:26px;margin:6px 0 2px}
+.sub{color:var(--mute);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.card h2{font-family:"Mitr";font-weight:400;font-size:19px;margin:0 0 10px;display:flex;gap:10px;align-items:center}
+.num{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;font-size:15px}
+label.f{display:block;font-size:14px;color:var(--mute);margin:10px 0 4px}
+input[type=text],input[type=password],input[type=number],textarea,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;color:inherit}
+textarea{resize:vertical;min-height:58px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 180px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;cursor:pointer;font:inherit;font-size:15px;color:var(--ink)}
+.chip.on{background:var(--acc2);color:#fff;border-color:var(--acc2)}
+.fontchip{font-size:19px}
+.btn{border:0;border-radius:14px;padding:12px 18px;font:inherit;font-weight:600;cursor:pointer;background:var(--acc2);color:#fff}
+.btn.ghost{background:#fff;color:var(--acc2);border:1px solid var(--line)}
+.btn.small{padding:7px 12px;font-size:14px;border-radius:10px}
+.btn:disabled{opacity:.5;cursor:default}
+.prod{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:12px 0;border-top:1px dashed var(--line)}
+.prod:first-of-type{border-top:0}
+.prod img{width:84px;height:110px;object-fit:cover;border-radius:12px;background:#eee}
+.prod .x{float:right;background:none;border:0;color:var(--bad);font-size:14px;cursor:pointer}
+details summary{cursor:pointer;color:var(--acc2);font-weight:600}
+.note{font-size:14px;color:var(--mute)}
+.warn{background:#fbf1e6;border:1px solid #efd9bf;border-radius:12px;padding:10px 12px;font-size:14px}
+#preview{width:180px;aspect-ratio:9/16;border-radius:14px;background:#ddd;display:block}
+.prevwrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.results{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.res{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px}
+.res video{width:100%;aspect-ratio:9/16;border-radius:12px;background:#111;display:block}
+.res .st{font-size:14px;margin:8px 0}
+.res .st.ok{color:var(--ok)} .res .st.bad{color:var(--bad)}
+.res textarea{font-size:13px;min-height:110px}
+.res .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.sticky{position:fixed;left:0;right:0;bottom:0;background:rgba(246,242,236,.95);backdrop-filter:blur(6px);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.sticky .in{max-width:880px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.sticky .btn{flex:1;font-size:17px;padding:14px}
+.bar{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.3s;pointer-events:none;z-index:9}
+.toast.on{opacity:1}
+
+.modal{position:fixed;inset:0;background:rgba(40,32,24,.55);display:flex;align-items:center;justify-content:center;z-index:8;padding:10px}
+.modal .box{background:var(--card);border-radius:18px;padding:14px;max-width:460px;width:100%;max-height:96vh;overflow:auto}
+#edCanvas{display:block;margin:8px auto;width:min(300px,70vw);aspect-ratio:9/16;border-radius:12px;background:#222;touch-action:none}
+.edtools{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.pick{display:grid;grid-template-columns:28px 64px 1fr;gap:10px;align-items:center;padding:10px 0;border-top:1px dashed var(--line)}
+.pick canvas{width:64px;height:64px;border-radius:10px;background:#eee}
+.pick .sc{display:inline-block;background:var(--acc);color:#fff;border-radius:8px;padding:0 7px;font-size:13px;margin-right:6px}
+.pick input{width:20px;height:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ปั่นคลิปมินิมอล 🐻</h1>
+  <p class="sub">ใส่รูปสินค้า กดเลือกสไตล์ แล้วให้โปรแกรมปั้นคลิปแนวตั้งทีละหลายชิ้น พร้อมแคปชันไว้โพสต์ปักตะกร้า</p>
+
+  <!-- 0 settings -->
+  <div class="card">
+    <h2><span class="num">⚙</span>ตั้งค่า (ทำครั้งเดียวต่อเครื่อง)</h2>
+    <div class="row">
+      <div>
+        <label class="f">วิธีสร้างคลิป</label>
+        <div class="chips" id="modeChips"></div>
+      </div>
+    </div>
+    <div id="apiBox">
+      <label class="f">Gemini API Key (ขอได้ที่ aistudio.google.com → Get API key)</label>
+      <input type="password" id="apiKey" placeholder="วางคีย์ที่นี่ ระบบเก็บไว้ในเครื่องนี้เท่านั้น">
+      <details style="margin-top:10px"><summary>ตั้งค่าขั้นสูง</summary>
+        <div class="row">
+          <div><label class="f">โมเดลวิดีโอ</label><input type="text" id="videoModel"></div>
+          <div><label class="f">โมเดลเขียนแคปชัน</label><input type="text" id="textModel"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">ความละเอียดที่ขอจาก AI (ไฟล์ที่ได้จะเป็น 720p เสมอ)</label><select id="res"><option>720p</option><option>1080p</option></select></div>
+          <div><label class="f">ทำพร้อมกันกี่คลิป</label><input type="number" id="conc" min="1" max="4"></div>
+        </div>
+      </details>
+    </div>
+    <p class="note" id="modeNote"></p>
+  </div>
+
+  <!-- finder -->
+  <div class="card" id="finder">
+    <h2><span class="num">🔎</span>ช่วยเลือกสินค้าขายดี</h2>
+    <ol class="note" style="margin:0 0 8px;padding-left:20px">
+      <li>เปิดแอป Shopee ค้นคำที่อยากทำ เช่น “ของแต่งบ้านมินิมอล”</li>
+      <li>กดเรียงแบบ <b>ขายดี</b> แล้วแคปหน้าจอผลค้นหา 2–6 รูป (เลื่อนลงแล้วแคปต่อ)</li>
+      <li>เลือกรูปแคปเข้ามา แล้วกด “วิเคราะห์” โปรแกรมจะอ่านยอดขายกับดาว แล้วจัดอันดับให้</li>
+    </ol>
+    <input type="file" id="shotIn" accept="image/*" multiple hidden>
+    <div class="row"><button class="btn ghost" id="shotBtn">+ เลือกรูปแคปผลค้นหา</button><button class="btn" id="anaBtn" disabled>วิเคราะห์</button></div>
+    <p class="note" id="shotInfo"></p>
+    <div id="pickList"></div>
+    <button class="btn" id="pickAdd" hidden style="width:100%;margin-top:10px">เพิ่มสินค้าที่เลือกเข้ารายการ</button>
+  </div>
+
+  <!-- 1 products -->
+  <div class="card">
+    <h2><span class="num">1</span>สินค้า</h2>
+    <p class="note">แคปรูปสินค้าจากแอป Shopee แล้วเลือกเข้ามาได้ทีละหลายรูป รูปละหนึ่งสินค้า พาดหัวขึ้นบรรทัดใหม่ได้ด้วยการกด Enter</p>
+    <input type="file" id="fileIn" accept="image/*" multiple hidden>
+    <div class="row" style="margin-bottom:6px">
+      <button class="btn ghost" id="addBtn">+ เพิ่มรูปสินค้า</button>
+      <button class="btn ghost" id="aiTextBtn">✨ ให้ AI คิดพาดหัวและแคปชัน</button>
+    </div>
+    <div id="prodList"></div>
+  </div>
+
+  <!-- 2 style -->
+  <div class="card">
+    <h2><span class="num">2</span>สไตล์คลิป</h2>
+    <label class="f">ฉาก</label><div class="chips" id="sceneChips"></div>
+    <label class="f">การเคลื่อนกล้อง</label><div class="chips" id="motionChips"></div>
+    <label class="f">ความยาวคลิป</label><div class="chips" id="lenChips"></div>
+    <label class="f">คนในคลิป</label><div class="chips" id="subjectChips"></div>
+    <p class="note" id="subjectNote" style="margin:4px 0 0"></p>
+    <label class="f"><input type="checkbox" id="noWm"> ลบลายน้ำ โลโก้ร้าน ตัวหนังสือ ป้ายราคา ที่แปะอยู่บนรูปสินค้า</label>
+    <label class="f">เพิ่มเติม (ไม่บังคับ)</label>
+    <input type="text" id="extra" placeholder="เช่น มีแมวเดินผ่าน, ไอน้ำลอยจากแก้ว">
+  </div>
+
+  <!-- audio -->
+  <div class="card">
+    <h2><span class="num">♪</span>เพลงและเสียงพากย์</h2>
+    <label class="f">เพลงประกอบ (โปรแกรมแต่งให้ใหม่ทุกคลิป ไม่ติดลิขสิทธิ์)</label><div class="chips" id="musicChips"></div>
+    <input type="file" id="musicIn" accept="audio/*" hidden>
+    <p class="note" id="musicInfo" style="margin:6px 0 0"></p>
+    <div class="row" style="margin-top:6px"><button class="btn small ghost" id="musicPrev">▶︎ ฟังตัวอย่างเพลง</button></div>
+    <label class="f">ความดังเพลง</label><input type="range" id="musicVol" min="0" max="100" style="width:100%">
+    <label class="f">เสียงพากย์ภาษาไทย</label>
+    <p class="note" style="margin:0 0 8px">ให้ AI เขียนบทพากย์สั้น ๆ ให้ แล้วอ่านอัดเสียงเองด้วยแอปบันทึกเสียง (บันทึกลงแอปไฟล์) จากนั้นกด “🎙 แนบเสียงพากย์” ที่สินค้าแต่ละชิ้น โปรแกรมจะลดเสียงเพลงลงตอนมีเสียงพูดให้เอง</p>
+    <button class="btn ghost" id="scriptBtn">✍️ ให้ AI เขียนบทพากย์</button>
+  </div>
+
+  <!-- 3 text -->
+  <div class="card">
+    <h2><span class="num">3</span>ตัวหนังสือบนคลิป</h2>
+    <div class="prevwrap">
+      <div style="flex:1 1 300px">
+        <label class="f">ฟอนต์</label><div class="chips" id="fontChips"></div>
+        <label class="f">สีตัวหนังสือ</label><div class="chips" id="colorChips"></div>
+        <label class="f">ตำแหน่ง</label><div class="chips" id="posChips"></div>
+        <label class="f">ขนาด</label><input type="range" id="size" min="50" max="150" style="width:100%">
+        <label class="f"><input type="checkbox" id="sparkle"> ประกายดาว ✦ รอบพาดหัว</label>
+      </div>
+      <canvas id="preview" width="360" height="640"></canvas>
+    </div>
+  </div>
+
+  <!-- results -->
+  <div class="card" id="resCard" hidden>
+    <h2><span class="num">4</span>คลิปที่ได้</h2>
+    <div class="warn">ก่อนโพสต์ ดูให้แน่ว่าสินค้าในคลิปตรงกับของจริง แล้วอย่าลืมเปิดป้าย “AI-generated” ในหน้าโพสต์ Shopee Video</div>
+    <div class="bar"><i id="prog"></i></div>
+    <button class="btn ghost" id="zipBtn" hidden style="width:100%;margin-top:10px">💾 บันทึกทุกคลิปพร้อมแคปชัน (.zip)</button>
+    <div class="results" id="results" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<div class="sticky"><div class="in">
+  <button class="btn" id="runBtn">สร้างคลิป</button>
+  <button class="btn ghost" id="stopBtn" hidden>หยุด</button>
+</div></div>
+<div class="modal" id="ed" hidden><div class="box">
+  <div style="font-family:Mitr;font-size:18px">แก้รูปสินค้า</div>
+  <p class="note" style="margin:4px 0">กรอบนี้คือหน้าตาคลิป · <b>เลื่อน</b> ลากรูปจัดตำแหน่ง ใช้แถบซูมให้สติกเกอร์ที่ขอบหลุดกรอบ · <b>ทาลบ</b> ระบายทับสติกเกอร์หรือลายน้ำ แล้วกด "ลบส่วนที่ทา"</p>
+  <div class="edtools"><button class="chip on" id="tPan">✋ เลื่อน</button><button class="chip" id="tBrush">🖌 ทาลบ</button></div>
+  <canvas id="edCanvas" width="540" height="960"></canvas>
+  <label class="f">ซูม</label><input type="range" id="edZoom" min="100" max="300" value="100" style="width:100%">
+  <label class="f">ขนาดพู่กัน</label><input type="range" id="edBrush" min="8" max="90" value="30" style="width:100%">
+  <div class="edtools" style="margin-top:10px">
+    <button class="btn small" id="edHeal">✨ ลบส่วนที่ทา</button>
+    <button class="btn small ghost" id="edUndo">↶ เลิกทำ</button>
+    <button class="btn small ghost" id="edCancel">ยกเลิก</button>
+    <button class="btn small" id="edDone">✓ ใช้รูปนี้</button>
+  </div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>"use strict";var Mp4Muxer=(()=>{var e=Object.defineProperty,t=Object.getOwnPropertyDescriptor,i=Object.getOwnPropertyNames,s=Object.prototype.hasOwnProperty,a=(e,t,i)=>{if(!t.has(e))throw TypeError("Cannot "+i)},r=(e,t,i)=>(a(e,t,"read from private field"),i?i.call(e):t.get(e)),n=(e,t,i)=>{if(t.has(e))throw TypeError("Cannot add the same private member more than once");t instanceof WeakSet?t.add(e):t.set(e,i)},o=(e,t,i,s)=>(a(e,t,"write to private field"),s?s.call(e,i):t.set(e,i),i),h=(e,t,i)=>(a(e,t,"access private method"),i),l={};((t,i)=>{for(var s in i)e(t,s,{get:i[s],enumerable:!0})})(l,{ArrayBufferTarget:()=>Me,FileSystemWritableFileStreamTarget:()=>Oe,Muxer:()=>Rt,StreamTarget:()=>We});var d,f,u,m,p,c,w,g,b=new Uint8Array(8),y=new DataView(b.buffer),k=e=>[(e%256+256)%256],T=e=>(y.setUint16(0,e,!1),[b[0],b[1]]),C=e=>(y.setUint32(0,e,!1),[b[1],b[2],b[3]]),v=e=>(y.setUint32(0,e,!1),[b[0],b[1],b[2],b[3]]),S=e=>(y.setUint32(0,Math.floor(e/2**32),!1),y.setUint32(4,e,!1),[b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7]]),x=e=>(y.setInt16(0,256*e,!1),[b[0],b[1]]),z=e=>(y.setInt32(0,65536*e,!1),[b[0],b[1],b[2],b[3]]),E=e=>(y.setInt32(0,2**30*e,!1),[b[0],b[1],b[2],b[3]]),A=(e,t=!1)=>{let i=Array(e.length).fill(null).map((t,i)=>e.charCodeAt(i));return t&&i.push(0),i},M=e=>e&&e[e.length-1],W=e=>{let t;for(let i of e)(!t||i.presentationTimestamp>t.presentationTimestamp)&&(t=i);return t},O=(e,t,i=!0)=>{let s=e*t;return i?Math.round(s):s},B=e=>{let t=e*(Math.PI/180),i=Math.cos(t),s=Math.sin(t);return[i,s,0,-s,i,0,0,0,1]},U=B(0),D=e=>[z(e[0]),z(e[1]),E(e[2]),z(e[3]),z(e[4]),E(e[5]),z(e[6]),z(e[7]),E(e[8])],j=e=>e?"object"!=typeof e?e:Array.isArray(e)?e.map(j):Object.fromEntries(Object.entries(e).map(([e,t])=>[e,j(t)])):e,R=e=>e>=0&&e<2**32,I=(e,t,i)=>({type:e,contents:t&&new Uint8Array(t.flat(10)),children:i}),N=(e,t,i,s,a)=>I(e,[k(t),C(i),s??[]],a),V=e=>({type:"mdat",largeSize:e}),F=(e,t,i=!1)=>I("moov",null,[L(t,e),...e.map(e=>$(e,t)),i?me(e):null]),L=(e,t)=>{let i=O(Math.max(0,...t.filter(e=>e.samples.length>0).map(e=>{const t=W(e.samples);return t.presentationTimestamp+t.duration})),Bt),s=Math.max(...t.map(e=>e.id))+1,a=!R(e)||!R(i),r=a?S:v;return N("mvhd",+a,0,[r(e),r(e),v(Bt),r(i),z(1),x(1),Array(10).fill(0),D(U),Array(24).fill(0),v(s)])},$=(e,t)=>I("trak",null,[P(e,t),H(e,t)]),P=(e,t)=>{let i,s=W(e.samples),a=O(s?s.presentationTimestamp+s.duration:0,Bt),r=!R(t)||!R(a),n=r?S:v;return i="video"===e.info.type?"number"==typeof e.info.rotation?B(e.info.rotation):e.info.rotation:U,N("tkhd",+r,3,[n(t),n(t),v(e.id),v(0),n(a),Array(8).fill(0),T(0),T(0),x("audio"===e.info.type?1:0),T(0),D(i),z("video"===e.info.type?e.info.width:0),z("video"===e.info.type?e.info.height:0)])},H=(e,t)=>I("mdia",null,[_(e,t),q("video"===e.info.type?"vide":"soun"),G(e)]),_=(e,t)=>{let i=W(e.samples),s=O(i?i.presentationTimestamp+i.duration:0,e.timescale),a=!R(t)||!R(s),r=a?S:v;return N("mdhd",+a,0,[r(t),r(t),v(e.timescale),r(s),T(21956),T(0)])},q=e=>N("hdlr",0,0,[A("mhlr"),A(e),v(0),v(0),v(0),A("mp4-muxer-hdlr",!0)]),G=e=>I("minf",null,["video"===e.info.type?J():K(),Q(),Z(e)]),J=()=>N("vmhd",0,1,[T(0),T(0),T(0),T(0)]),K=()=>N("smhd",0,0,[T(0),T(0)]),Q=()=>I("dinf",null,[X()]),X=()=>N("dref",0,0,[v(1)],[Y()]),Y=()=>N("url ",0,1),Z=e=>{const t=e.compositionTimeOffsetTable.length>1||e.compositionTimeOffsetTable.some(e=>0!==e.sampleCompositionTimeOffset);return I("stbl",null,[ee(e),oe(e),he(e),le(e),de(e),fe(e),t?ue(e):null])},ee=e=>N("stsd",0,0,[v(1)],["video"===e.info.type?te(Se[e.info.codec],e):ne(ze[e.info.codec],e)]),te=(e,t)=>{return I(e,[Array(6).fill(0),T(1),T(0),T(0),Array(12).fill(0),T(t.info.width),T(t.info.height),v(4718592),v(4718592),v(0),T(1),Array(32).fill(0),T(24),(i=65535,y.setInt16(0,i,!1),[b[0],b[1]])],[xe[t.info.codec](t),t.info.decoderConfig.colorSpace?re(t):null]);var i},ie={bt709:1,bt470bg:5,smpte170m:6},se={bt709:1,smpte170m:6,"iec61966-2-1":13},ae={rgb:0,bt709:1,bt470bg:5,smpte170m:6},re=e=>I("colr",[A("nclx"),T(ie[e.info.decoderConfig.colorSpace.primaries]),T(se[e.info.decoderConfig.colorSpace.transfer]),T(ae[e.info.decoderConfig.colorSpace.matrix]),k((e.info.decoderConfig.colorSpace.fullRange?1:0)<<7)]),ne=(e,t)=>I(e,[Array(6).fill(0),T(1),T(0),T(0),v(0),T(t.info.numberOfChannels),T(16),T(0),T(0),z(t.info.sampleRate)],[Ee[t.info.codec](t)]),oe=e=>N("stts",0,0,[v(e.timeToSampleTable.length),e.timeToSampleTable.map(e=>[v(e.sampleCount),v(e.sampleDelta)])]),he=e=>{if(e.samples.every(e=>"key"===e.type))return null;let t=[...e.samples.entries()].filter(([,e])=>"key"===e.type);return N("stss",0,0,[v(t.length),t.map(([e])=>v(e+1))])},le=e=>N("stsc",0,0,[v(e.compactlyCodedChunkTable.length),e.compactlyCodedChunkTable.map(e=>[v(e.firstChunk),v(e.samplesPerChunk),v(1)])]),de=e=>N("stsz",0,0,[v(0),v(e.samples.length),e.samples.map(e=>v(e.size))]),fe=e=>e.finalizedChunks.length>0&&M(e.finalizedChunks).offset>=2**32?N("co64",0,0,[v(e.finalizedChunks.length),e.finalizedChunks.map(e=>S(e.offset))]):N("stco",0,0,[v(e.finalizedChunks.length),e.finalizedChunks.map(e=>v(e.offset))]),ue=e=>N("ctts",0,0,[v(e.compositionTimeOffsetTable.length),e.compositionTimeOffsetTable.map(e=>[v(e.sampleCount),v(e.sampleCompositionTimeOffset)])]),me=e=>I("mvex",null,e.map(pe)),pe=e=>N("trex",0,0,[v(e.id),v(1),v(0),v(0),v(0)]),ce=(e,t)=>I("moof",null,[we(e),...t.map(be)]),we=e=>N("mfhd",0,0,[v(e)]),ge=e=>{let t=0,i=0,s="delta"===e.type;return i|=+s,t|=s?1:2,t<<24|i<<16},be=e=>I("traf",null,[ye(e),ke(e),Te(e)]),ye=e=>{let t=0;t|=8,t|=16,t|=32,t|=131072;let i=e.currentChunk.samples[1]??e.currentChunk.samples[0],s={duration:i.timescaleUnitsToNextSample,size:i.size,flags:ge(i)};return N("tfhd",0,131128,[v(e.id),v(s.duration),v(s.size),v(s.flags)])},ke=e=>N("tfdt",1,0,[S(O(e.currentChunk.startTimestamp,e.timescale))]),Te=e=>{let t=e.currentChunk.samples.map(e=>e.timescaleUnitsToNextSample),i=e.currentChunk.samples.map(e=>e.size),s=e.currentChunk.samples.map(ge),a=e.currentChunk.samples.map(t=>O(t.presentationTimestamp-t.decodeTimestamp,e.timescale)),r=new Set(t),n=new Set(i),o=new Set(s),h=new Set(a),l=2===o.size&&s[0]!==s[1],d=r.size>1,f=n.size>1,u=!l&&o.size>1,m=h.size>1||[...h].some(e=>0!==e),p=0;return p|=1,p|=4*+l,p|=256*+d,p|=512*+f,p|=1024*+u,p|=2048*+m,N("trun",1,p,[v(e.currentChunk.samples.length),v(e.currentChunk.offset-e.currentChunk.moofOffset||0),l?v(s[0]):[],e.currentChunk.samples.map((e,r)=>{return[d?v(t[r]):[],f?v(i[r]):[],u?v(s[r]):[],m?(n=a[r],y.setInt32(0,n,!1),[b[0],b[1],b[2],b[3]]):[]];var n})])},Ce=(e,t)=>N("tfra",1,0,[v(e.id),v(63),v(e.finalizedChunks.length),e.finalizedChunks.map(i=>[S(O(i.startTimestamp,e.timescale)),S(i.moofOffset),v(t+1),v(1),v(1)])]),ve=()=>N("mfro",0,0,[v(0)]),Se={avc:"avc1",hevc:"hvc1",vp9:"vp09",av1:"av01"},xe={avc:e=>e.info.decoderConfig&&I("avcC",[...new Uint8Array(e.info.decoderConfig.description)]),hevc:e=>e.info.decoderConfig&&I("hvcC",[...new Uint8Array(e.info.decoderConfig.description)]),vp9:e=>{if(!e.info.decoderConfig)return null;let t=e.info.decoderConfig;if(!t.colorSpace)throw new Error("'colorSpace' is required in the decoder config for VP9.");let i=t.codec.split("."),s=Number(i[1]),a=Number(i[2]),r=0+(Number(i[3])<<4)+Number(t.colorSpace.fullRange);return N("vpcC",1,0,[k(s),k(a),k(r),k(2),k(2),k(2),T(0)])},av1:()=>I("av1C",[129,0,0,0])},ze={aac:"mp4a",opus:"Opus"},Ee={aac:e=>{let t=new Uint8Array(e.info.decoderConfig.description);return N("esds",0,0,[v(58753152),k(32+t.byteLength),T(1),k(0),v(75530368),k(18+t.byteLength),k(64),k(21),C(0),v(130071),v(130071),v(92307584),k(t.byteLength),...t,v(109084800),k(1),k(2)])},opus:e=>{let t=3840,i=0;const s=e.info.decoderConfig?.description;if(s){if(s.byteLength<18)throw new TypeError("Invalid decoder description provided for Opus; must be at least 18 bytes long.");const e=ArrayBuffer.isView(s)?new DataView(s.buffer,s.byteOffset,s.byteLength):new DataView(s);t=e.getUint16(10,!0),i=e.getInt16(14,!0)}return I("dOps",[k(0),k(e.info.numberOfChannels),T(t),v(e.info.sampleRate),x(i),k(0)])}},Ae=(Symbol("isTarget"),class{}),Me=class extends Ae{constructor(){super(...arguments),this.buffer=null}},We=class extends Ae{constructor(e){if(super(),this.options=e,"object"!=typeof e)throw new TypeError("StreamTarget requires an options object to be passed to its constructor.");if(e.onData){if("function"!=typeof e.onData)throw new TypeError("options.onData, when provided, must be a function.");if(e.onData.length<2)throw new TypeError("options.onData, when provided, must be a function that takes in at least two arguments (data and position). Ignoring the position argument, which specifies the byte offset at which the data is to be written, can lead to broken outputs.")}if(void 0!==e.chunked&&"boolean"!=typeof e.chunked)throw new TypeError("options.chunked, when provided, must be a boolean.");if(void 0!==e.chunkSize&&(!Number.isInteger(e.chunkSize)||e.chunkSize<1024))throw new TypeError("options.chunkSize, when provided, must be an integer and not smaller than 1024.")}},Oe=class extends Ae{constructor(e,t){if(super(),this.stream=e,this.options=t,!(e instanceof FileSystemWritableFileStream))throw new TypeError("FileSystemWritableFileStreamTarget requires a FileSystemWritableFileStream instance.");if(void 0!==t&&"object"!=typeof t)throw new TypeError("FileSystemWritableFileStreamTarget's options, when provided, must be an object.");if(t&&void 0!==t.chunkSize&&(!Number.isInteger(t.chunkSize)||t.chunkSize<=0))throw new TypeError("options.chunkSize, when provided, must be a positive integer")}},Be=class{constructor(){this.pos=0,n(this,d,new Uint8Array(8)),n(this,f,new DataView(r(this,d).buffer)),this.offsets=new WeakMap}seek(e){this.pos=e}writeU32(e){r(this,f).setUint32(0,e,!1),this.write(r(this,d).subarray(0,4))}writeU64(e){r(this,f).setUint32(0,Math.floor(e/2**32),!1),r(this,f).setUint32(4,e,!1),this.write(r(this,d).subarray(0,8))}writeAscii(e){for(let t=0;t<e.length;t++)r(this,f).setUint8(t%8,e.charCodeAt(t)),t%8==7&&this.write(r(this,d));e.length%8!=0&&this.write(r(this,d).subarray(0,e.length%8))}writeBox(e){if(this.offsets.set(e,this.pos),e.contents&&!e.children)this.writeBoxHeader(e,e.size??e.contents.byteLength+8),this.write(e.contents);else{let t=this.pos;if(this.writeBoxHeader(e,0),e.contents&&this.write(e.contents),e.children)for(let t of e.children)t&&this.writeBox(t);let i=this.pos,s=e.size??i-t;this.seek(t),this.writeBoxHeader(e,s),this.seek(i)}}writeBoxHeader(e,t){this.writeU32(e.largeSize?1:t),this.writeAscii(e.type),e.largeSize&&this.writeU64(t)}measureBoxHeader(e){return 8+(e.largeSize?8:0)}patchBox(e){let t=this.pos;this.seek(this.offsets.get(e)),this.writeBox(e),this.seek(t)}measureBox(e){if(e.contents&&!e.children){return this.measureBoxHeader(e)+e.contents.byteLength}{let t=this.measureBoxHeader(e);if(e.contents&&(t+=e.contents.byteLength),e.children)for(let i of e.children)i&&(t+=this.measureBox(i));return t}}};d=new WeakMap,f=new WeakMap;var Ue=class extends Be{constructor(e){super(),n(this,w),n(this,u,void 0),n(this,m,new ArrayBuffer(65536)),n(this,p,new Uint8Array(r(this,m))),n(this,c,0),o(this,u,e)}write(e){h(this,w,g).call(this,this.pos+e.byteLength),r(this,p).set(e,this.pos),this.pos+=e.byteLength,o(this,c,Math.max(r(this,c),this.pos))}finalize(){h(this,w,g).call(this,this.pos),r(this,u).buffer=r(this,m).slice(0,Math.max(r(this,c),this.pos))}};u=new WeakMap,m=new WeakMap,p=new WeakMap,c=new WeakMap,w=new WeakSet,g=function(e){let t=r(this,m).byteLength;for(;t<e;)t*=2;if(t===r(this,m).byteLength)return;let i=new ArrayBuffer(t),s=new Uint8Array(i);s.set(r(this,p),0),o(this,m,i),o(this,p,s)};var De,je,Re,Ie,Ne,Ve,Fe,Le,$e,Pe,He,_e,qe,Ge=class extends Be{constructor(e){super(),n(this,Ve),n(this,Le),n(this,Pe),n(this,_e),n(this,De,void 0),n(this,je,[]),n(this,Re,void 0),n(this,Ie,void 0),n(this,Ne,[]),o(this,De,e),o(this,Re,e.options?.chunked??!1),o(this,Ie,e.options?.chunkSize??16777216)}write(e){r(this,je).push({data:e.slice(),start:this.pos}),this.pos+=e.byteLength}flush(){if(0===r(this,je).length)return;let e=[],t=[...r(this,je)].sort((e,t)=>e.start-t.start);e.push({start:t[0].start,size:t[0].data.byteLength});for(let i=1;i<t.length;i++){let s=e[e.length-1],a=t[i];a.start<=s.start+s.size?s.size=Math.max(s.size,a.start+a.data.byteLength-s.start):e.push({start:a.start,size:a.data.byteLength})}for(let t of e){t.data=new Uint8Array(t.size);for(let e of r(this,je))t.start<=e.start&&e.start<t.start+t.size&&t.data.set(e.data,e.start-t.start);r(this,Re)?(h(this,Ve,Fe).call(this,t.data,t.start),h(this,_e,qe).call(this)):r(this,De).options.onData?.(t.data,t.start)}r(this,je).length=0}finalize(){r(this,Re)&&h(this,_e,qe).call(this,!0)}};De=new WeakMap,je=new WeakMap,Re=new WeakMap,Ie=new WeakMap,Ne=new WeakMap,Ve=new WeakSet,Fe=function(e,t){let i=r(this,Ne).findIndex(e=>e.start<=t&&t<e.start+r(this,Ie));-1===i&&(i=h(this,Pe,He).call(this,t));let s=r(this,Ne)[i],a=t-s.start,n=e.subarray(0,Math.min(r(this,Ie)-a,e.byteLength));s.data.set(n,a);let o={start:a,end:a+n.byteLength};if(h(this,Le,$e).call(this,s,o),0===s.written[0].start&&s.written[0].end===r(this,Ie)&&(s.shouldFlush=!0),r(this,Ne).length>2){for(let e=0;e<r(this,Ne).length-1;e++)r(this,Ne)[e].shouldFlush=!0;h(this,_e,qe).call(this)}n.byteLength<e.byteLength&&h(this,Ve,Fe).call(this,e.subarray(n.byteLength),t+n.byteLength)},Le=new WeakSet,$e=function(e,t){let i=0,s=e.written.length-1,a=-1;for(;i<=s;){let r=Math.floor(i+(s-i+1)/2);e.written[r].start<=t.start?(i=r+1,a=r):s=r-1}for(e.written.splice(a+1,0,t),(-1===a||e.written[a].end<t.start)&&a++;a<e.written.length-1&&e.written[a].end>=e.written[a+1].start;)e.written[a].end=Math.max(e.written[a].end,e.written[a+1].end),e.written.splice(a+1,1)},Pe=new WeakSet,He=function(e){let t={start:Math.floor(e/r(this,Ie))*r(this,Ie),data:new Uint8Array(r(this,Ie)),written:[],shouldFlush:!1};return r(this,Ne).push(t),r(this,Ne).sort((e,t)=>e.start-t.start),r(this,Ne).indexOf(t)},_e=new WeakSet,qe=function(e=!1){for(let t=0;t<r(this,Ne).length;t++){let i=r(this,Ne)[t];if(i.shouldFlush||e){for(let e of i.written)r(this,De).options.onData?.(i.data.subarray(e.start,e.end),i.start+e.start);r(this,Ne).splice(t--,1)}}};var Je,Ke,Qe,Xe,Ye,Ze,et,tt,it,st,at,rt,nt,ot,ht,lt,dt,ft,ut,mt,pt,ct,wt,gt,bt,yt,kt,Tt,Ct,vt,St,xt,zt,Et,At,Mt,Wt,Ot=class extends Ge{constructor(e){super(new We({onData:(t,i)=>e.stream.write({type:"write",data:t,position:i}),chunked:!0,chunkSize:e.options?.chunkSize}))}},Bt=1e3,Ut=["avc","hevc","vp9","av1"],Dt=["aac","opus"],jt=["strict","offset","cross-track-offset"],Rt=class{constructor(e){if(n(this,nt),n(this,ht),n(this,dt),n(this,ut),n(this,pt),n(this,wt),n(this,bt),n(this,kt),n(this,Ct),n(this,St),n(this,zt),n(this,At),n(this,Je,void 0),n(this,Ke,void 0),n(this,Qe,void 0),n(this,Xe,void 0),n(this,Ye,null),n(this,Ze,null),n(this,et,Math.floor(Date.now()/1e3)+2082844800),n(this,tt,[]),n(this,it,1),n(this,st,[]),n(this,at,[]),n(this,rt,!1),h(this,nt,ot).call(this,e),e.video=j(e.video),e.audio=j(e.audio),e.fastStart=j(e.fastStart),this.target=e.target,o(this,Je,{firstTimestampBehavior:"strict",...e}),e.target instanceof Me)o(this,Ke,new Ue(e.target));else if(e.target instanceof We)o(this,Ke,new Ge(e.target));else{if(!(e.target instanceof Oe))throw new Error(`Invalid target: ${e.target}`);o(this,Ke,new Ot(e.target))}h(this,ut,mt).call(this),h(this,ht,lt).call(this)}addVideoChunk(e,t,i,s){if(!(e instanceof EncodedVideoChunk))throw new TypeError("addVideoChunk's first argument (sample) must be of type EncodedVideoChunk.");if(t&&"object"!=typeof t)throw new TypeError("addVideoChunk's second argument (meta), when provided, must be an object.");if(void 0!==i&&(!Number.isFinite(i)||i<0))throw new TypeError("addVideoChunk's third argument (timestamp), when provided, must be a non-negative real number.");if(void 0!==s&&!Number.isFinite(s))throw new TypeError("addVideoChunk's fourth argument (compositionTimeOffset), when provided, must be a real number.");let a=new Uint8Array(e.byteLength);e.copyTo(a),this.addVideoChunkRaw(a,e.type,i??e.timestamp,e.duration,t,s)}addVideoChunkRaw(e,t,i,s,a,n){if(!(e instanceof Uint8Array))throw new TypeError("addVideoChunkRaw's first argument (data) must be an instance of Uint8Array.");if("key"!==t&&"delta"!==t)throw new TypeError("addVideoChunkRaw's second argument (type) must be either 'key' or 'delta'.");if(!Number.isFinite(i)||i<0)throw new TypeError("addVideoChunkRaw's third argument (timestamp) must be a non-negative real number.");if(!Number.isFinite(s)||s<0)throw new TypeError("addVideoChunkRaw's fourth argument (duration) must be a non-negative real number.");if(a&&"object"!=typeof a)throw new TypeError("addVideoChunkRaw's fifth argument (meta), when provided, must be an object.");if(void 0!==n&&!Number.isFinite(n))throw new TypeError("addVideoChunkRaw's sixth argument (compositionTimeOffset), when provided, must be a real number.");if(h(this,At,Mt).call(this),!r(this,Je).video)throw new Error("No video track declared.");if("object"==typeof r(this,Je).fastStart&&r(this,Ye).samples.length===r(this,Je).fastStart.expectedVideoChunks)throw new Error(`Cannot add more video chunks than specified in 'fastStart' (${r(this,Je).fastStart.expectedVideoChunks}).`);let o=h(this,wt,gt).call(this,r(this,Ye),e,t,i,s,a,n);if("fragmented"===r(this,Je).fastStart&&r(this,Ze)){for(;r(this,at).length>0&&r(this,at)[0].decodeTimestamp<=o.decodeTimestamp;){let e=r(this,at).shift();h(this,bt,yt).call(this,r(this,Ze),e)}o.decodeTimestamp<=r(this,Ze).lastDecodeTimestamp?h(this,bt,yt).call(this,r(this,Ye),o):r(this,st).push(o)}else h(this,bt,yt).call(this,r(this,Ye),o)}addAudioChunk(e,t,i){if(!(e instanceof EncodedAudioChunk))throw new TypeError("addAudioChunk's first argument (sample) must be of type EncodedAudioChunk.");if(t&&"object"!=typeof t)throw new TypeError("addAudioChunk's second argument (meta), when provided, must be an object.");if(void 0!==i&&(!Number.isFinite(i)||i<0))throw new TypeError("addAudioChunk's third argument (timestamp), when provided, must be a non-negative real number.");let s=new Uint8Array(e.byteLength);e.copyTo(s),this.addAudioChunkRaw(s,e.type,i??e.timestamp,e.duration,t)}addAudioChunkRaw(e,t,i,s,a){if(!(e instanceof Uint8Array))throw new TypeError("addAudioChunkRaw's first argument (data) must be an instance of Uint8Array.");if("key"!==t&&"delta"!==t)throw new TypeError("addAudioChunkRaw's second argument (type) must be either 'key' or 'delta'.");if(!Number.isFinite(i)||i<0)throw new TypeError("addAudioChunkRaw's third argument (timestamp) must be a non-negative real number.");if(!Number.isFinite(s)||s<0)throw new TypeError("addAudioChunkRaw's fourth argument (duration) must be a non-negative real number.");if(a&&"object"!=typeof a)throw new TypeError("addAudioChunkRaw's fifth argument (meta), when provided, must be an object.");if(h(this,At,Mt).call(this),!r(this,Je).audio)throw new Error("No audio track declared.");if("object"==typeof r(this,Je).fastStart&&r(this,Ze).samples.length===r(this,Je).fastStart.expectedAudioChunks)throw new Error(`Cannot add more audio chunks than specified in 'fastStart' (${r(this,Je).fastStart.expectedAudioChunks}).`);let n=h(this,wt,gt).call(this,r(this,Ze),e,t,i,s,a);if("fragmented"===r(this,Je).fastStart&&r(this,Ye)){for(;r(this,st).length>0&&r(this,st)[0].decodeTimestamp<=n.decodeTimestamp;){let e=r(this,st).shift();h(this,bt,yt).call(this,r(this,Ye),e)}n.decodeTimestamp<=r(this,Ye).lastDecodeTimestamp?h(this,bt,yt).call(this,r(this,Ze),n):r(this,at).push(n)}else h(this,bt,yt).call(this,r(this,Ze),n)}finalize(){if(r(this,rt))throw new Error("Cannot finalize a muxer more than once.");if("fragmented"===r(this,Je).fastStart){for(let e of r(this,st))h(this,bt,yt).call(this,r(this,Ye),e);for(let e of r(this,at))h(this,bt,yt).call(this,r(this,Ze),e);h(this,St,xt).call(this,!1)}else r(this,Ye)&&h(this,Ct,vt).call(this,r(this,Ye)),r(this,Ze)&&h(this,Ct,vt).call(this,r(this,Ze));let e=[r(this,Ye),r(this,Ze)].filter(Boolean);if("in-memory"===r(this,Je).fastStart){let t;for(let i=0;i<2;i++){let i=F(e,r(this,et)),s=r(this,Ke).measureBox(i);t=r(this,Ke).measureBox(r(this,Xe));let a=r(this,Ke).pos+s+t;for(let e of r(this,tt)){e.offset=a;for(let{data:i}of e.samples)a+=i.byteLength,t+=i.byteLength}if(a<2**32)break;t>=2**32&&(r(this,Xe).largeSize=!0)}let i=F(e,r(this,et));r(this,Ke).writeBox(i),r(this,Xe).size=t,r(this,Ke).writeBox(r(this,Xe));for(let e of r(this,tt))for(let t of e.samples)r(this,Ke).write(t.data),t.data=null}else if("fragmented"===r(this,Je).fastStart){let t=r(this,Ke).pos,i=(e=>I("mfra",null,[...e.map(Ce),ve()]))(e);r(this,Ke).writeBox(i);let s=r(this,Ke).pos-t;r(this,Ke).seek(r(this,Ke).pos-4),r(this,Ke).writeU32(s)}else{let t=r(this,Ke).offsets.get(r(this,Xe)),i=r(this,Ke).pos-t;r(this,Xe).size=i,r(this,Xe).largeSize=i>=2**32,r(this,Ke).patchBox(r(this,Xe));let s=F(e,r(this,et));if("object"==typeof r(this,Je).fastStart){r(this,Ke).seek(r(this,Qe)),r(this,Ke).writeBox(s);let e=t-r(this,Ke).pos;r(this,Ke).writeBox({type:"free",size:e})}else r(this,Ke).writeBox(s)}h(this,zt,Et).call(this),r(this,Ke).finalize(),o(this,rt,!0)}};return Je=new WeakMap,Ke=new WeakMap,Qe=new WeakMap,Xe=new WeakMap,Ye=new WeakMap,Ze=new WeakMap,et=new WeakMap,tt=new WeakMap,it=new WeakMap,st=new WeakMap,at=new WeakMap,rt=new WeakMap,nt=new WeakSet,ot=function(e){if("object"!=typeof e)throw new TypeError("The muxer requires an options object to be passed to its constructor.");if(!(e.target instanceof Ae))throw new TypeError("The target must be provided and an instance of Target.");if(e.video){if(!Ut.includes(e.video.codec))throw new TypeError(`Unsupported video codec: ${e.video.codec}`);if(!Number.isInteger(e.video.width)||e.video.width<=0)throw new TypeError(`Invalid video width: ${e.video.width}. Must be a positive integer.`);if(!Number.isInteger(e.video.height)||e.video.height<=0)throw new TypeError(`Invalid video height: ${e.video.height}. Must be a positive integer.`);const t=e.video.rotation;if("number"==typeof t&&![0,90,180,270].includes(t))throw new TypeError(`Invalid video rotation: ${t}. Has to be 0, 90, 180 or 270.`);if(Array.isArray(t)&&(9!==t.length||t.some(e=>"number"!=typeof e)))throw new TypeError(`Invalid video transformation matrix: ${t.join()}`);if(void 0!==e.video.frameRate&&(!Number.isInteger(e.video.frameRate)||e.video.frameRate<=0))throw new TypeError(`Invalid video frame rate: ${e.video.frameRate}. Must be a positive integer.`)}if(e.audio){if(!Dt.includes(e.audio.codec))throw new TypeError(`Unsupported audio codec: ${e.audio.codec}`);if(!Number.isInteger(e.audio.numberOfChannels)||e.audio.numberOfChannels<=0)throw new TypeError(`Invalid number of audio channels: ${e.audio.numberOfChannels}. Must be a positive integer.`);if(!Number.isInteger(e.audio.sampleRate)||e.audio.sampleRate<=0)throw new TypeError(`Invalid audio sample rate: ${e.audio.sampleRate}. Must be a positive integer.`)}if(e.firstTimestampBehavior&&!jt.includes(e.firstTimestampBehavior))throw new TypeError(`Invalid first timestamp behavior: ${e.firstTimestampBehavior}`);if("object"==typeof e.fastStart){if(e.video){if(void 0===e.fastStart.expectedVideoChunks)throw new TypeError("'fastStart' is an object but is missing property 'expectedVideoChunks'.");if(!Number.isInteger(e.fastStart.expectedVideoChunks)||e.fastStart.expectedVideoChunks<0)throw new TypeError("'expectedVideoChunks' must be a non-negative integer.")}if(e.audio){if(void 0===e.fastStart.expectedAudioChunks)throw new TypeError("'fastStart' is an object but is missing property 'expectedAudioChunks'.");if(!Number.isInteger(e.fastStart.expectedAudioChunks)||e.fastStart.expectedAudioChunks<0)throw new TypeError("'expectedAudioChunks' must be a non-negative integer.")}}else if(![!1,"in-memory","fragmented"].includes(e.fastStart))throw new TypeError("'fastStart' option must be false, 'in-memory', 'fragmented' or an object.");if(void 0!==e.minFragmentDuration&&(!Number.isFinite(e.minFragmentDuration)||e.minFragmentDuration<0))throw new TypeError("'minFragmentDuration' must be a non-negative number.")},ht=new WeakSet,lt=function(){var e;if(r(this,Ke).writeBox((e={holdsAvc:"avc"===r(this,Je).video?.codec,fragmented:"fragmented"===r(this,Je).fastStart}).fragmented?I("ftyp",[A("iso5"),v(512),A("iso5"),A("iso6"),A("mp41")]):I("ftyp",[A("isom"),v(512),A("isom"),e.holdsAvc?A("avc1"):[],A("mp41")])),o(this,Qe,r(this,Ke).pos),"in-memory"===r(this,Je).fastStart)o(this,Xe,V(!1));else if("fragmented"===r(this,Je).fastStart);else{if("object"==typeof r(this,Je).fastStart){let e=h(this,dt,ft).call(this);r(this,Ke).seek(r(this,Ke).pos+e)}o(this,Xe,V(!0)),r(this,Ke).writeBox(r(this,Xe))}h(this,zt,Et).call(this)},dt=new WeakSet,ft=function(){if("object"!=typeof r(this,Je).fastStart)return;let e=0,t=[r(this,Je).fastStart.expectedVideoChunks,r(this,Je).fastStart.expectedAudioChunks];for(let i of t)i&&(e+=8*Math.ceil(2/3*i),e+=4*i,e+=12*Math.ceil(2/3*i),e+=4*i,e+=8*i);return e+=4096,e},ut=new WeakSet,mt=function(){if(r(this,Je).video&&o(this,Ye,{id:1,info:{type:"video",codec:r(this,Je).video.codec,width:r(this,Je).video.width,height:r(this,Je).video.height,rotation:r(this,Je).video.rotation??0,decoderConfig:null},timescale:r(this,Je).video.frameRate??57600,samples:[],finalizedChunks:[],currentChunk:null,firstDecodeTimestamp:void 0,lastDecodeTimestamp:-1,timeToSampleTable:[],compositionTimeOffsetTable:[],lastTimescaleUnits:null,lastSample:null,compactlyCodedChunkTable:[]}),r(this,Je).audio&&(o(this,Ze,{id:r(this,Je).video?2:1,info:{type:"audio",codec:r(this,Je).audio.codec,numberOfChannels:r(this,Je).audio.numberOfChannels,sampleRate:r(this,Je).audio.sampleRate,decoderConfig:null},timescale:r(this,Je).audio.sampleRate,samples:[],finalizedChunks:[],currentChunk:null,firstDecodeTimestamp:void 0,lastDecodeTimestamp:-1,timeToSampleTable:[],compositionTimeOffsetTable:[],lastTimescaleUnits:null,lastSample:null,compactlyCodedChunkTable:[]}),"aac"===r(this,Je).audio.codec)){let e=h(this,pt,ct).call(this,2,r(this,Je).audio.sampleRate,r(this,Je).audio.numberOfChannels);r(this,Ze).info.decoderConfig={codec:r(this,Je).audio.codec,description:e,numberOfChannels:r(this,Je).audio.numberOfChannels,sampleRate:r(this,Je).audio.sampleRate}}},pt=new WeakSet,ct=function(e,t,i){let s=[96e3,88200,64e3,48e3,44100,32e3,24e3,22050,16e3,12e3,11025,8e3,7350].indexOf(t),a=i,r="";r+=e.toString(2).padStart(5,"0"),r+=s.toString(2).padStart(4,"0"),15===s&&(r+=t.toString(2).padStart(24,"0")),r+=a.toString(2).padStart(4,"0");let n=8*Math.ceil(r.length/8);r=r.padEnd(n,"0");let o=new Uint8Array(r.length/8);for(let e=0;e<r.length;e+=8)o[e/8]=parseInt(r.slice(e,e+8),2);return o},wt=new WeakSet,gt=function(e,t,i,s,a,r,n){let o=s/1e6,l=(s-(n??0))/1e6,d=a/1e6,f=h(this,kt,Tt).call(this,o,l,e);return o=f.presentationTimestamp,l=f.decodeTimestamp,r?.decoderConfig&&(null===e.info.decoderConfig?e.info.decoderConfig=r.decoderConfig:Object.assign(e.info.decoderConfig,r.decoderConfig)),{presentationTimestamp:o,decodeTimestamp:l,duration:d,data:t,size:t.byteLength,type:i,timescaleUnitsToNextSample:O(d,e.timescale)}},bt=new WeakSet,yt=function(e,t){"fragmented"!==r(this,Je).fastStart&&e.samples.push(t);const i=O(t.presentationTimestamp-t.decodeTimestamp,e.timescale);if(null!==e.lastTimescaleUnits){let s=O(t.decodeTimestamp,e.timescale,!1),a=Math.round(s-e.lastTimescaleUnits);if(e.lastTimescaleUnits+=a,e.lastSample.timescaleUnitsToNextSample=a,"fragmented"!==r(this,Je).fastStart){let t=M(e.timeToSampleTable);1===t.sampleCount?(t.sampleDelta=a,t.sampleCount++):t.sampleDelta===a?t.sampleCount++:(t.sampleCount--,e.timeToSampleTable.push({sampleCount:2,sampleDelta:a}));const s=M(e.compositionTimeOffsetTable);s.sampleCompositionTimeOffset===i?s.sampleCount++:e.compositionTimeOffsetTable.push({sampleCount:1,sampleCompositionTimeOffset:i})}}else e.lastTimescaleUnits=0,"fragmented"!==r(this,Je).fastStart&&(e.timeToSampleTable.push({sampleCount:1,sampleDelta:O(t.duration,e.timescale)}),e.compositionTimeOffsetTable.push({sampleCount:1,sampleCompositionTimeOffset:i}));e.lastSample=t;let s=!1;if(e.currentChunk){let i=t.presentationTimestamp-e.currentChunk.startTimestamp;if("fragmented"===r(this,Je).fastStart){let a=r(this,Ye)??r(this,Ze);const n=r(this,Je).minFragmentDuration??1;e===a&&"key"===t.type&&i>=n&&(s=!0,h(this,St,xt).call(this))}else s=i>=.5}else s=!0;s&&(e.currentChunk&&h(this,Ct,vt).call(this,e),e.currentChunk={startTimestamp:t.presentationTimestamp,samples:[]}),e.currentChunk.samples.push(t)},kt=new WeakSet,Tt=function(e,t,i){const s="strict"===r(this,Je).firstTimestampBehavior,a=-1===i.lastDecodeTimestamp;if(s&&a&&0!==t)throw new Error(`The first chunk for your media track must have a timestamp of 0 (received DTS=${t}).Non-zero first timestamps are often caused by directly piping frames or audio data from a MediaStreamTrack into the encoder. Their timestamps are typically relative to the age of thedocument, which is probably what you want.\n\nIf you want to offset all timestamps of a track such that the first one is zero, set firstTimestampBehavior: 'offset' in the options.\n`);if("offset"===r(this,Je).firstTimestampBehavior||"cross-track-offset"===r(this,Je).firstTimestampBehavior){let s;void 0===i.firstDecodeTimestamp&&(i.firstDecodeTimestamp=t),s="offset"===r(this,Je).firstTimestampBehavior?i.firstDecodeTimestamp:Math.min(r(this,Ye)?.firstDecodeTimestamp??1/0,r(this,Ze)?.firstDecodeTimestamp??1/0),t-=s,e-=s}if(t<i.lastDecodeTimestamp)throw new Error(`Timestamps must be monotonically increasing (DTS went from ${1e6*i.lastDecodeTimestamp} to ${1e6*t}).`);return i.lastDecodeTimestamp=t,{presentationTimestamp:e,decodeTimestamp:t}},Ct=new WeakSet,vt=function(e){if("fragmented"===r(this,Je).fastStart)throw new Error("Can't finalize individual chunks if 'fastStart' is set to 'fragmented'.");if(e.currentChunk)if(e.finalizedChunks.push(e.currentChunk),r(this,tt).push(e.currentChunk),0!==e.compactlyCodedChunkTable.length&&M(e.compactlyCodedChunkTable).samplesPerChunk===e.currentChunk.samples.length||e.compactlyCodedChunkTable.push({firstChunk:e.finalizedChunks.length,samplesPerChunk:e.currentChunk.samples.length}),"in-memory"!==r(this,Je).fastStart){e.currentChunk.offset=r(this,Ke).pos;for(let t of e.currentChunk.samples)r(this,Ke).write(t.data),t.data=null;h(this,zt,Et).call(this)}else e.currentChunk.offset=0},St=new WeakSet,xt=function(e=!0){if("fragmented"!==r(this,Je).fastStart)throw new Error("Can't finalize a fragment unless 'fastStart' is set to 'fragmented'.");let t=[r(this,Ye),r(this,Ze)].filter(e=>e&&e.currentChunk);if(0===t.length)return;let i=(s=this,a=it,{set _(e){o(s,a,e,n)},get _(){return r(s,a,l)}})._++;var s,a,n,l;if(1===i){let e=F(t,r(this,et),!0);r(this,Ke).writeBox(e)}let d=r(this,Ke).pos,f=ce(i,t);r(this,Ke).writeBox(f);{let e=V(!1),i=0;for(let e of t)for(let t of e.currentChunk.samples)i+=t.size;let s=r(this,Ke).measureBox(e)+i;s>=2**32&&(e.largeSize=!0,s=r(this,Ke).measureBox(e)+i),e.size=s,r(this,Ke).writeBox(e)}for(let e of t){e.currentChunk.offset=r(this,Ke).pos,e.currentChunk.moofOffset=d;for(let t of e.currentChunk.samples)r(this,Ke).write(t.data),t.data=null}let u=r(this,Ke).pos;r(this,Ke).seek(r(this,Ke).offsets.get(f));let m=ce(i,t);r(this,Ke).writeBox(m),r(this,Ke).seek(u);for(let e of t)e.finalizedChunks.push(e.currentChunk),r(this,tt).push(e.currentChunk),e.currentChunk=null;e&&h(this,zt,Et).call(this)},zt=new WeakSet,Et=function(){r(this,Ke)instanceof Ge&&r(this,Ke).flush()},At=new WeakSet,Mt=function(){if(r(this,rt))throw new Error("Cannot add new video or audio chunks after the file has been finalized.")},Wt=l,((a,r,n,o)=>{if(r&&"object"==typeof r||"function"==typeof r)for(let h of i(r))s.call(a,h)||h===n||e(a,h,{get:()=>r[h],enumerable:!(o=t(r,h))||o.enumerable});return a})(e({},"__esModule",{value:!0}),Wt)})();"object"==typeof module&&"object"==typeof module.exports&&Object.assign(module.exports,Mp4Muxer);</script>
+<script>
+const API='https://generativelanguage.googleapis.com/v1beta';
+const IN_ART=!!(window.claude&&typeof window.claude.use==='function');
+let DL=null,SAMPLE=null,SLIM=null;if(IN_ART){window.claude.use('downloads').then(d=>DL=d).catch(()=>{});window.claude.use('sample').then(async x=>{SAMPLE=x;if(x){SLIM=await x.limits().catch(()=>null)}onChange()}).catch(()=>{})}
+const $=s=>document.querySelector(s);
+const SCENES=[
+ {id:'living',t:'ห้องนั่งเล่นครีม',p:'a bright minimalist cream-and-beige living room, linen sofa, light oak wood, soft morning sunlight through sheer curtains, a small green plant'},
+ {id:'japandi',t:'ญี่ปุ่นไม้อ่อน',p:'a calm Japandi interior with pale wood, rattan, paper lamp, neutral earthy tones, gentle diffused daylight'},
+ {id:'kitchen',t:'ครัวขาวสะอาด',p:'a clean white modern kitchen countertop of white marble, ceramic jars on open shelves, fresh fruit nearby, bright natural light'},
+ {id:'bedroom',t:'ห้องนอนละมุน',p:'a cozy minimalist bedroom with white bedding, soft beige throw, warm golden-hour light, sheer curtains moving slightly'},
+ {id:'bath',t:'ห้องน้ำสปา',p:'a serene spa-like bathroom in white and stone tones, folded towels, eucalyptus, soft daylight'},
+ {id:'desk',t:'โต๊ะทำงานมินิมอล',p:'a tidy minimalist work desk of light wood by a window, notebook and ceramic mug, soft daylight'},
+ {id:'rug',t:'พรมขนนุ่มริมหน้าต่าง',p:'a fluffy cream shag rug on a light wood floor beside a big window, sunlight patches on the floor'},
+ {id:'studio',t:'ฉากสตูดิโอเรียบ',p:'a seamless soft beige studio backdrop with a natural stone pedestal, elegant soft shadows'}
+];
+const MOTIONS=[
+ {id:'push',t:'ค่อย ๆ ซูมเข้า',p:'slow smooth cinematic push-in toward the product'},
+ {id:'orbit',t:'หมุนรอบสินค้า',p:'slow smooth orbit around the product, parallax background'},
+ {id:'slide',t:'เลื่อนด้านข้าง',p:'slow lateral dolly slide past the product'},
+ {id:'still',t:'กล้องนิ่ง แสงเคลื่อน',p:'locked-off static camera, only sunlight and shadows drift gently across the scene'}
+];
+const SUBJECTS=[{id:'product',t:'สินค้าอย่างเดียว'},{id:'hands',t:'มีมือคนใช้สินค้า'},{id:'model',t:'มีนางแบบ/นายแบบ'}];
+const MUSICS=[{id:'none',t:'ไม่มีเพลง'},{id:'warm',t:'ละมุนอบอุ่น'},{id:'bright',t:'สดใสน่ารัก'},{id:'calm',t:'สปาผ่อนคลาย'},{id:'custom',t:'ใช้เพลงของฉัน'}];
+const LENS=[{id:15,t:'15 วิ (แนะนำ)'},{id:20,t:'20 วิ'},{id:30,t:'30 วิ'}];
+const FONTS=['Sriracha','Mali','Itim','Kanit','Mitr','Prompt','Charm','Chonburi'];
+const COLORS=[{t:'ขาว',c:'#ffffff'},{t:'ครีม',c:'#fff4e0'},{t:'น้ำตาล',c:'#6b4a2f'},{t:'ดำ',c:'#222222'}];
+const POS=[{id:'top',t:'บน'},{id:'mid',t:'กลาง'},{id:'bottom',t:'ล่าง'}];
+const MODES=[{id:'ai',t:'AI สร้างวิดีโอ (ใช้คีย์)'},{id:'free',t:'ฟรี: ภาพนิ่งซูมช้า'}];
+
+const DEF={mode:'ai',apiKey:'',videoModel:'gemini-omni-1.1-flash',textModel:'gemini-flash-latest',res:'720p',conc:2,
+ scene:'living',motion:'push',extra:'',font:'Sriracha',color:'#ffffff',pos:'top',size:100,sparkle:true,label:true,noWm:true,subject:'product',music:'warm',musicVol:60,clipLen:15};
+let S={...DEF};
+try{Object.assign(S,JSON.parse(localStorage.getItem('pankhlip')||'{}'))}catch(e){}
+if(IN_ART)S.mode='free';
+const save=()=>{try{localStorage.setItem('pankhlip',JSON.stringify(S))}catch(e){}};
+
+let products=[]; // {id,name,headline,caption,b64,url,img}
+let jobs=[]; let stopFlag=false; let running=false;
+
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2600)}
+function chips(el,list,key,cls){
+  el.innerHTML='';
+  list.forEach(o=>{const b=document.createElement('button');b.className='chip'+(cls?' '+cls:'');
+    const v=o.id??o.c??o; b.textContent=o.t??o; if(cls==='fontchip')b.style.fontFamily=`"${o}"`;
+    if(o.c){b.innerHTML=`<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${o.c};border:1px solid #ccc;vertical-align:-2px;margin-right:6px"></span>${o.t}`}
+    b.classList.toggle('on',S[key]===v);
+    b.onclick=()=>{S[key]=v;save();chips(el,list,key,cls);if(key==='music'&&v==='custom')$('#musicIn').click();onChange()};el.appendChild(b)});
+}
+function onChange(){
+  if(IN_ART&&S.mode==='ai'){S.mode='free';chips($('#modeChips'),MODES,'mode');toast('ลิงก์นี้ใช้ได้แค่โหมดฟรี โหมด AI ต้องเปิดจากเว็บของคุณเอง')}
+  $('#aiTextBtn').hidden=IN_ART&&!SAMPLE;$('#scriptBtn').hidden=IN_ART&&!SAMPLE;$('#finder').hidden=IN_ART?!SAMPLE:false;
+  $('#apiBox').hidden=S.mode!=='ai';
+  $('#subjectNote').textContent=S.mode==='ai'?(S.subject!=='product'?'AI จะใส่คนลงในฉากให้ ตรวจดูว่าสินค้ายังเหมือนของจริง':''):'โหมดฟรีใช้รูปสินค้าตรง ๆ จึงใส่คนไม่ได้ ถ้าอยากได้คน ให้ใช้รูปที่มีคนถือสินค้า หรือใช้โหมด AI';
+  $('#musicInfo').textContent=S.music==='custom'?(CUSTOM_MUSIC?`เพลงของคุณ ${CUSTOM_MUSIC.duration.toFixed(0)} วิ (ใช้เพลงที่มีสิทธิ์ใช้เท่านั้นนะ)`:'กดปุ่ม "ใช้เพลงของฉัน" อีกครั้งเพื่อเลือกไฟล์'):'';
+  $('#modeNote').textContent=S.mode==='ai'
+   ?'คลิปจะสร้างจากรูปสินค้าของคุณโดย AI ของ Google ค่าใช้จ่ายคิดกับบัญชี Google ของคุณเอง ลองทำ 1–2 คลิปก่อนเพื่อดูราคาและคุณภาพ'
+   :'ไม่ต้องใช้คีย์ ไม่เสียเงิน โปรแกรมทำคลิปจากรูปสินค้าตรง ๆ ด้วยการซูมช้าและวางตัวหนังสือ เหมาะไว้ลองฟอนต์หรือเริ่มช่องแบบประหยัด (โหมดนี้ลบลายน้ำบนรูปไม่ได้ ควรใช้รูปที่สะอาด หรือครอปลายน้ำออกก่อน)';
+  updateRunBtn(); drawPreview();
+}
+function updateRunBtn(){const n=products.length;$('#runBtn').textContent=n?`สร้าง ${n} คลิป`:'เพิ่มรูปสินค้าก่อนนะ';$('#runBtn').disabled=!n||running}
+
+/* ---------- products ---------- */
+$('#addBtn').onclick=()=>$('#fileIn').click();
+$('#fileIn').onchange=async e=>{
+  const fl=[...e.target.files];e.target.value='';$('#runBtn').disabled=true;let k=0;
+  for(const f of fl){$('#runBtn').textContent=`กำลังโหลดรูป ${++k}/${fl.length}…`;
+    const {b64,url,img}=await loadImg(f);
+    products.push({id:Math.random().toString(36).slice(2),name:f.name.replace(/\.[^.]+$/,'').slice(0,30).replace(/^IMG_?\d+$/i,''),headline:'',caption:'',b64,url,img});
+  }
+  renderProducts();onChange();
+};
+function loadImg(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{
+  const m=1280,sc=Math.min(1,m/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);
+  c.getContext('2d').drawImage(im,0,0,c.width,c.height);const url=c.toDataURL('image/jpeg',.9);const out=new Image();out.onload=()=>res({b64:url.split(',')[1],url,img:out});out.src=url};
+  im.onerror=rej;im.src=r.result};r.readAsDataURL(file)})}
+function renderProducts(){
+  const L=$('#prodList');L.innerHTML='';
+  if(!products.length){L.innerHTML='<p class="note">ยังไม่มีสินค้า</p>';return}
+  products.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='prod';
+    d.innerHTML=`<img alt=""><div><button class="x">ลบ</button><button class="btn small ghost ed" style="margin-bottom:4px">✂︎ ครอป / ลบสติกเกอร์</button>
+      <label class="f" style="margin-top:0">ชื่อสินค้า (สั้น ๆ)</label><input type="text" class="nm" placeholder="เช่น ก้านไม้หอม">
+      <label class="f">พาดหัวบนคลิป</label><textarea class="hl" rows="2" placeholder="เช่น ก้านไม้หอม&#10;กลิ่นหอมผ่อนคลาย"></textarea>
+      <label class="f">บทพากย์ (ไว้อ่านอัดเสียง)</label><textarea class="scr" rows="2" placeholder="กด ✍️ ให้ AI เขียน หรือพิมพ์เอง"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><button class="btn small ghost vb">🎙 แนบเสียงพากย์</button><span class="note vn"></span><button class="btn small ghost vx" hidden>ลบเสียง</button></div>
+      <input type="file" class="vin" accept="audio/*" hidden></div>`;
+    d.querySelector('img').src=p.url;
+    const nm=d.querySelector('.nm'),hl=d.querySelector('.hl');nm.value=p.name;hl.value=p.headline;
+    nm.oninput=()=>{p.name=nm.value;if(i===0)drawPreview()};hl.oninput=()=>{p.headline=hl.value;if(i===0)drawPreview()};
+    const scr=d.querySelector('.scr');scr.value=p.script||'';scr.oninput=()=>p.script=scr.value;
+    const vn=d.querySelector('.vn'),vx=d.querySelector('.vx'),vin=d.querySelector('.vin');
+    const showV=()=>{vn.textContent=p.voiceBuf?`มีเสียงแล้ว ${p.voiceBuf.duration.toFixed(1)} วิ`:'';vx.hidden=!p.voiceBuf};showV();
+    d.querySelector('.vb').onclick=()=>vin.click();
+    vin.onchange=async()=>{const f=vin.files[0];vin.value='';if(!f)return;vn.textContent='กำลังอ่านไฟล์เสียง…';
+      try{p.voiceBuf=await decodeAudio(f);if(p.voiceBuf.duration>59)toast('เสียงยาวเกิน 59 วิ จะถูกตัดท้าย');}catch(e){toast('เปิดไฟล์เสียงนี้ไม่ได้ ลองไฟล์ .m4a หรือ .mp3');p.voiceBuf=null}showV()};
+    vx.onclick=()=>{p.voiceBuf=null;showV()};
+    d.querySelector('.ed').onclick=()=>openEditor(p);
+    d.querySelector('.x').onclick=()=>{products.splice(i,1);renderProducts();onChange()};
+    L.appendChild(d)});
+}
+
+/* ---------- text overlay drawing ---------- */
+function drawOverlay(ctx,W,H,p){
+  const lines=(p.headline||p.name||'').split('\n').map(s=>s.trim()).filter(Boolean);
+  const k=W/360*S.size/100;
+  if(lines.length){
+    let fs=34*k;ctx.font=`${fs}px "${S.font}"`;
+    const maxW=W*.86;let widest=Math.max(...lines.map(l=>ctx.measureText(l).width));
+    if(widest>maxW){fs*=maxW/widest;ctx.font=`${fs}px "${S.font}"`}
+    const lh=fs*1.32,total=lh*lines.length;
+    let y0=S.pos==='top'?H*.13:S.pos==='mid'?H/2-total/2:H*.70;
+    ctx.textAlign='center';ctx.textBaseline='top';
+    const dark=S.color==='#222222'||S.color==='#6b4a2f';
+    ctx.shadowColor=dark?'rgba(255,255,255,.7)':'rgba(0,0,0,.35)';ctx.shadowBlur=10*k;ctx.shadowOffsetY=2*k;
+    ctx.fillStyle=S.color;
+    lines.forEach((l,i)=>{ctx.font=`${i===0?fs:fs*.86}px "${S.font}"`;ctx.fillText(l,W/2,y0+i*lh)});
+    if(S.sparkle){
+      ctx.font=`${fs*.5}px sans-serif`;
+      const w0=Math.min(maxW,widest)/2;
+      [[-w0-fs*.5,y0-fs*.1,1],[w0+fs*.45,y0+fs*.2,.8],[w0+fs*.2,y0+total-fs*.3,.6],[-w0-fs*.2,y0+total-fs*.5,.7]].forEach(([dx,y,s])=>{
+        ctx.font=`${fs*.5*s}px sans-serif`;ctx.fillText('✦',W/2+dx,y)});
+    }
+    ctx.shadowColor='transparent';
+  }
+
+}
+function drawCover(ctx,src,W,H,zoom=1,dx=0,dy=0){
+  const sw=src.videoWidth||src.width,sh=src.videoHeight||src.height;const sc=Math.max(W/sw,H/sh)*zoom;
+  const w=sw*sc,h=sh*sc;ctx.drawImage(src,(W-w)/2+dx,(H-h)/2+dy,w,h);
+}
+async function drawPreview(){
+  const c=$('#preview'),ctx=c.getContext('2d');
+  try{await document.fonts.load(`34px "${S.font}"`)}catch(e){}
+  ctx.clearRect(0,0,c.width,c.height);
+  const p=products[0];
+  if(p){drawCover(ctx,p.img,c.width,c.height)}else{const g=ctx.createLinearGradient(0,0,0,c.height);g.addColorStop(0,'#e9dfd1');g.addColorStop(1,'#cbb8a0');ctx.fillStyle=g;ctx.fillRect(0,0,c.width,c.height)}
+  drawOverlay(ctx,c.width,c.height,p||{name:'ก้านไม้หอม',headline:'ก้านไม้หอม\nกลิ่นหอมผ่อนคลาย'});
+}
+
+/* ---------- Gemini calls ---------- */
+const hdr=()=>({'Content-Type':'application/json','x-goog-api-key':S.apiKey.trim()});
+async function errText(r){let t='';try{const j=await r.json();t=j.error?.message||JSON.stringify(j)}catch(e){t=r.statusText}
+  if(r.status===400&&/key/i.test(t))return 'คีย์ไม่ถูกต้อง';if(r.status===429)return 'โควตาเต็มหรือเรียกถี่เกินไป ลองใหม่อีกสักพัก';
+  if(r.status===403)return 'คีย์ไม่มีสิทธิ์ใช้โมเดลนี้ (อาจต้องเปิดการเรียกเก็บเงินใน AI Studio): '+t;return `${r.status} ${t}`}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function buildPrompt(p){
+  const sc=SCENES.find(x=>x.id===S.scene),mo=MOTIONS.find(x=>x.id===S.motion);
+  return `Vertical 9:16 short product showcase video for social commerce. The product from the reference image${p.name?` (${p.name})`:''} is the hero: keep it EXACTLY as in the reference — same shape, colors, materials, proportions, labels and logo. Do not redesign or alter the product. ${S.noWm?'IMPORTANT: the reference image may contain overlays that are NOT part of the product — watermarks, shop logos, store names, promotional text, price tags, stickers, badges, frames, collage borders, arrows or icons. Completely ignore and remove all of them; show only the clean physical product. Keep only branding that is physically printed on the product itself. ':''}Setting: ${sc.p}. Camera: ${mo.p}. Photorealistic, premium minimalist aesthetic, soft natural light, shallow depth of field, calm and clean composition with empty space in the upper third. ${S.extra?'Extra details: '+S.extra+'. ':''}${S.subject==='hands'?'A person\'s hands naturally pick up, touch and use the product (only hands and forearms visible, no face). ':S.subject==='model'?'A friendly, natural-looking Asian model casually uses and enjoys the product in this setting, lifestyle feel, the product always clearly visible and in focus. ':'No people, no hands. '}No on-screen text, no captions, no subtitles, no watermark, no logos added.`;
+}
+function findVideo(j){
+  const all=[];(j.steps||[]).forEach(s=>(s.content||[]).forEach(c=>all.push(c)));
+  (j.outputs||[]).forEach(c=>all.push(c));if(j.output_video)all.push(j.output_video);
+  return all.find(c=>c&&(c.type==='video'||/video/.test(c.mime_type||'')));
+}
+async function genVideo(p,job){
+  const body={model:S.videoModel.trim(),
+    input:[{type:'image',data:p.b64,mime_type:'image/jpeg'},{type:'text',text:buildPrompt(p)}],
+    generation_config:{video_config:{task:'image_to_video'}},
+    response_format:{type:'video',aspect_ratio:'9:16',resolution:S.res}};
+  setJob(job,'กำลังส่งงานให้ AI…');
+  let r=await fetch(API+'/interactions',{method:'POST',headers:hdr(),body:JSON.stringify(body)});
+  if(!r.ok)throw new Error(await errText(r));
+  let j=await r.json();let t0=Date.now();
+  while(!findVideo(j)&&j.status!=='completed'){
+    if(stopFlag)throw new Error('หยุดแล้ว');
+    if(['failed','cancelled','expired'].includes(j.status))throw new Error('AI สร้างไม่สำเร็จ: '+(j.error?.message||j.status));
+    setJob(job,`AI กำลังปั้นคลิป… ${Math.round((Date.now()-t0)/1000)} วิ`);
+    await sleep(6000);
+    r=await fetch(API+'/interactions/'+encodeURIComponent(j.id),{headers:hdr()});
+    if(!r.ok)throw new Error(await errText(r));j=await r.json();
+  }
+  const v=findVideo(j);if(!v)throw new Error('AI ไม่ส่งวิดีโอกลับมา อาจติดนโยบายเนื้อหา ลองเปลี่ยนรูปหรือฉาก');
+  if(v.data){const bin=atob(v.data);const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:'video/mp4'})}
+  if(v.uri){
+    const id=v.uri.replace(/^.*?(files\/[^?]+).*$/,'$1');
+    for(;;){if(stopFlag)throw new Error('หยุดแล้ว');const fr=await fetch(`${API}/${id}`,{headers:hdr()});if(!fr.ok)throw new Error(await errText(fr));
+      const f=await fr.json();if(f.state==='ACTIVE')break;if(f.state==='FAILED')throw new Error('ไฟล์วิดีโอเสีย');setJob(job,'กำลังเตรียมไฟล์…');await sleep(5000)}
+    const dr=await fetch(`${API}/${id}:download?alt=media&key=${encodeURIComponent(S.apiKey.trim())}`);if(!dr.ok)throw new Error(await errText(dr));
+    return await dr.blob();
+  }
+  throw new Error('รูปแบบวิดีโอที่ได้ไม่รู้จัก');
+}
+async function askJSON(prompt,imgs){ // imgs: [{b64,mime}]
+  if(SAMPLE){
+    const blobs=imgs.map(x=>{const bin=atob(x.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:x.mime||'image/jpeg'})});
+    try{return await SAMPLE.json(prompt,blobs.length?{images:blobs,cache:false}:{cache:false})}
+    catch(e){const m={not_granted:'ยังไม่ได้อนุญาตให้ใช้ Claude',rate_limited:'ใช้งานถี่เกินไปหรือโควตาเต็ม ลองใหม่อีกสักพัก',invalid_json:'อ่านคำตอบไม่ได้ ลองกดใหม่',image_rejected:'รูปบางรูปใช้ไม่ได้'};throw new Error(m[e.code]||e.message||e.code)}
+  }
+  if(!S.apiKey.trim())throw new Error('ใส่ Gemini API Key ในตั้งค่าก่อน');
+  const parts=[{text:prompt},...imgs.map(x=>({inline_data:{mime_type:x.mime||'image/jpeg',data:x.b64}}))];
+  const r=await fetch(`${API}/models/${encodeURIComponent(S.textModel.trim())}:generateContent`,{method:'POST',headers:hdr(),
+    body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseMimeType:'application/json',temperature:.7}})});
+  if(!r.ok)throw new Error(await errText(r));
+  const j=await r.json();const txt=j.candidates?.[0]?.content?.parts?.map(x=>x.text||'').join('')||'[]';
+  return JSON.parse(txt.replace(/^\s*```(json)?|```\s*$/g,''));
+}
+const maxImgs=()=>Math.max(1,Math.min(6,SLIM?.images?.maxCount||6));
+async function genTexts(list){
+  const items=list.map((p,i)=>`${i+1}. ${p.name||'(ไม่มีชื่อ ดูจากรูปที่ '+(i+1)+')'}`).join('\n');
+  return askJSON(`คุณเป็นนักเขียนคอนเทนต์ปักตะกร้า Shopee สไตล์มินิมอล น่ารัก อบอุ่น ภาษาไทยถูกต้อง แนบรูปสินค้าเรียงตามลำดับ สำหรับสินค้าแต่ละชิ้นให้เขียน
+- name: ชื่อสินค้าสั้น ๆ ไม่เกิน 3 คำ
+- headline: พาดหัวบนคลิป 2 บรรทัด คั่นด้วย \\n แต่ละบรรทัดไม่เกิน 18 ตัวอักษร ไม่ใช้อีโมจิ
+- caption: แคปชันโพสต์ 2–3 ประโยค ชวนกดตะกร้า ไม่อวดอ้างเกินจริง ไม่ระบุราคา ตามด้วยแฮชแท็กไทย 5 อัน
+ตอบเป็น JSON array อย่างเดียว เรียงตามลำดับ เช่น [{"name":"...","headline":"...\\n...","caption":"..."}]
+สินค้า:\n${items}`,list.map(p=>({b64:p.b64})));
+}
+$('#aiTextBtn').onclick=async()=>{
+  if(!products.length)return toast('เพิ่มรูปสินค้าก่อนนะ');
+  if(!SAMPLE&&!S.apiKey.trim())return toast('ใส่ Gemini API Key ในตั้งค่าก่อน');
+  const b=$('#aiTextBtn');b.disabled=true;b.textContent='กำลังคิด…';
+  try{for(let i=0;i<products.length;i+=maxImgs()){const chunk=products.slice(i,i+maxImgs());const out=await genTexts(chunk);
+      chunk.forEach((p,k)=>{const o=out[k];if(!o)return;if(!p.name)p.name=o.name||'';if(!p.headline)p.headline=(o.headline||'').replace(/\\n/g,'\n');p.caption=o.caption||''})}
+    renderProducts();drawPreview();toast('เขียนเสร็จแล้ว แก้ต่อได้ตามใจ')}
+  catch(e){toast('เขียนไม่สำเร็จ: '+e.message)}
+  b.disabled=false;b.textContent='✨ ให้ AI คิดพาดหัวและแคปชัน';
+};
+const fallbackCaption=p=>`${p.name||'ของดีติดบ้าน'} ดีไซน์มินิมอล เข้ากับทุกมุมของบ้าน ใครชอบสไตล์เรียบละมุนต้องมีติดไว้สักชิ้น กดตะกร้าดูรายละเอียดได้เลย 🧺\n#ของแต่งบ้าน #มินิมอล #ของมันต้องมี #ช้อปปี้ #ปักตะกร้า`;
+
+/* ---------- compose final clip ---------- */
+const OW=720,OH=1280,FPS=30;
+function pickMime(){const L=['video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9','video/webm'];
+  return L.find(m=>window.MediaRecorder&&MediaRecorder.isTypeSupported(m))||''}
+async function pickCodec(){
+  if(!window.VideoEncoder||!window.VideoFrame||!window.Mp4Muxer)return null;
+  for(const codec of ['avc1.4d0028','avc1.640028','avc1.42e028','avc1.42001f']){
+    const cfg={codec,width:OW,height:OH,bitrate:6e6,framerate:FPS,avc:{format:'avc'}};
+    try{const r=await VideoEncoder.isConfigSupported(cfg);if(r.supported)return cfg}catch(e){}
+  }return null;
+}
+
+const pingpong=(t,d)=>{const e=Math.max(.1,d-.04),c=t%(2*e);return c<e?c:2*e-c}; // fill target length: forward then backward
+function stillMotion(t,dur){const n=Math.max(1,Math.round(dur/5)),L=dur/n,i=Math.min(n-1,Math.floor(t/L)),k=(t-i*L)/L,e=k*k*(3-2*k);
+  const m=(i+(S.motion==='slide'?1:S.motion==='orbit'?2:0))%3;
+  if(m===0)return [1.04+.12*e,0,0];if(m===1)return [1.12,(e-.5)*OW*.08,0];return [1.16-.12*e,0,(.5-e)*OH*.03]}
+const seekTo=(v,t)=>new Promise(r=>{const done=()=>{v.removeEventListener('seeked',done);r()};v.addEventListener('seeked',done);v.currentTime=t});
+async function compose(p,srcBlob,job){
+  await document.fonts.load(`34px "${S.font}"`).catch(()=>{});await document.fonts.load(`600 13px "Kanit"`).catch(()=>{});
+  let src,dur=+S.clipLen||15,isVid=!!srcBlob,vurl,vidDur=0;
+  if(isVid){src=document.createElement('video');src.muted=true;src.playsInline=true;src.preload='auto';vurl=URL.createObjectURL(srcBlob);src.src=vurl;
+    await new Promise((res,rej)=>{src.onloadeddata=res;src.onerror=()=>rej(new Error('เปิดวิดีโอจาก AI ไม่ได้'))});
+    vidDur=isFinite(src.duration)&&src.duration>0?src.duration:8;
+  }else{src=p.img}
+setJob(job,'กำลังทำเพลงและเสียง…');const aud=await buildAudio(p,dur);if(aud)dur=aud.dur;
+  const c=document.createElement('canvas');c.width=OW;c.height=OH;const ctx=c.getContext('2d');
+  const frame=t=>{ctx.fillStyle='#000';ctx.fillRect(0,0,OW,OH);
+    if(isVid)drawCover(ctx,src,OW,OH);else{const [z,dx,dy]=stillMotion(t,dur);drawCover(ctx,src,OW,OH,z,dx,dy)}
+    drawOverlay(ctx,OW,OH,p)};
+  try{
+    const cfg=await pickCodec();const acfg=aud?await pickAudioCodec():null;
+    if(cfg&&(!aud||acfg)){ // frame-by-frame H.264 encode -> standard MP4 (plays everywhere, incl. iPad/iPhone)
+      const muxer=new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(),video:{codec:'avc',width:OW,height:OH,frameRate:FPS},...(aud?{audio:{codec:acfg.mux,numberOfChannels:2,sampleRate:48000}}:{}),fastStart:'in-memory'});
+      if(aud){let aErr=null;const ae=new AudioEncoder({output:(ch,meta)=>muxer.addAudioChunk(ch,meta),error:e=>aErr=e});ae.configure(acfg.cfg);
+        const L=aud.buf.getChannelData(0),R=aud.buf.getChannelData(1),N=L.length;
+        for(let off=0;off<N;off+=1024){const n=Math.min(1024,N-off),d=new Float32Array(n*2);d.set(L.subarray(off,off+n),0);d.set(R.subarray(off,off+n),n);
+          const ad=new AudioData({format:'f32-planar',sampleRate:48000,numberOfFrames:n,numberOfChannels:2,timestamp:Math.round(off/48000*1e6),data:d});ae.encode(ad);ad.close();
+          if(ae.encodeQueueSize>32)await sleep(2);if(aErr)throw aErr}
+        await ae.flush();ae.close();}
+      let encErr=null;const enc=new VideoEncoder({output:(ch,meta)=>muxer.addVideoChunk(ch,meta),error:e=>encErr=e});
+      enc.configure(cfg);
+      const n=Math.max(1,Math.round(dur*FPS));
+      for(let i=0;i<n;i++){
+        if(stopFlag)throw new Error('หยุดแล้ว');if(encErr)throw encErr;
+        const t=i/FPS;if(isVid)await seekTo(src,pingpong(t,vidDur));frame(t);
+        const vf=new VideoFrame(c,{timestamp:Math.round(t*1e6),duration:Math.round(1e6/FPS)});
+        enc.encode(vf,{keyFrame:i%FPS===0});vf.close();
+        while(enc.encodeQueueSize>8)await sleep(5);
+        if(i%15===0){setJob(job,`กำลังวางตัวหนังสือ… ${Math.round(i/n*100)}%`);await sleep(0)}
+      }
+      await enc.flush();enc.close();muxer.finalize();
+      return new Blob([muxer.target.buffer],{type:'video/mp4'});
+    }
+    // fallback: real-time recording (older browsers)
+    const mime=pickMime();if(!mime)throw new Error('เบราว์เซอร์นี้ทำวิดีโอไม่ได้ ลองอัปเดต Safari/Chrome');
+    const stream=c.captureStream(FPS);let ac=null,asrc=null;
+    if(aud){try{ac=new AudioContext({sampleRate:48000});await ac.resume();asrc=ac.createBufferSource();asrc.buffer=aud.buf;const dst=ac.createMediaStreamDestination();asrc.connect(dst);stream.addTrack(dst.stream.getAudioTracks()[0])}catch(e){ac=null}}
+    const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:6e6});
+    const chunks=[];rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);const done=new Promise(r=>rec.onstop=r);
+    frame(0);rec.start();if(asrc)asrc.start();setJob(job,'กำลังวางตัวหนังสือ… (เปิดหน้านี้ค้างไว้)');
+    if(isVid){src.loop=true;src.currentTime=0;await src.play();
+      const t0=performance.now();await new Promise(res=>{const tick=()=>{const t=(performance.now()-t0)/1000;if(stopFlag||t>=dur){res();return}frame(t);requestAnimationFrame(tick)};tick()});
+    }else{const t0=performance.now();
+      await new Promise(res=>{const tick=()=>{const t=(performance.now()-t0)/1000;if(stopFlag||t>=dur){res();return}frame(t);requestAnimationFrame(tick)};tick()});}
+    rec.stop();await done;if(ac)ac.close();return new Blob(chunks,{type:mime.split(';')[0]});
+  }finally{if(vurl)URL.revokeObjectURL(vurl)}
+}
+
+/* ---------- jobs & results ---------- */
+function setJob(job,msg,cls){job.st.textContent=msg;job.st.className='st'+(cls?' '+cls:'')}
+function makeCard(p){
+  const d=document.createElement('div');d.className='res';
+  d.innerHTML=`<div style="font-weight:600"></div><video controls playsinline loop preload="metadata" hidden></video><div class="st">รอคิว</div>
+   <textarea class="cap" hidden></textarea><div class="acts" hidden>
+   <button class="btn small sv">บันทึกคลิป</button><button class="btn small ghost cp">คัดลอกแคปชัน</button><button class="btn small ghost rt">ทำใหม่</button></div>`;
+  d.firstElementChild.textContent=p.name||'สินค้า';$('#results').appendChild(d);
+  return {p,el:d,st:d.querySelector('.st'),vid:d.querySelector('video'),cap:d.querySelector('.cap'),acts:d.querySelector('.acts')};
+}
+function extOf(b){return /mp4/.test(b.type)?'mp4':'webm'}
+function finishCard(job,blob){
+  job.blob=blob;const u=URL.createObjectURL(blob);job.vid.src=u+'#t=0.1';job.vid.hidden=false;
+  job.cap.value=job.p.caption||fallbackCaption(job.p);job.cap.hidden=false;job.acts.hidden=false;
+  setJob(job,blob.type.includes('mp4')?'เสร็จแล้ว ✓ 720p (720×1280)':'เสร็จแล้ว ✓ (ไฟล์ .webm หากโพสต์ไม่ได้ ให้เปิดโปรแกรมด้วย Safari หรือ Chrome รุ่นใหม่)','ok');
+  const fname=`${(job.p.name||'clip').replace(/[\\/:*?"<>|]/g,'')}.${extOf(blob)}`;
+  job.acts.querySelector('.sv').onclick=async()=>{
+    if(DL){try{await DL.save({filename:fname,data:blob});toast('บันทึกแล้ว');}catch(e){if(e&&e.code!=='declined')toast('บันทึกไม่ได้: '+(e.message||e.code))}return}
+    const file=new File([blob],fname,{type:blob.type});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){try{await navigator.share({files:[file]});return}catch(e){if(e.name==='AbortError')return}}
+    const a=document.createElement('a');a.href=u;a.download=fname;document.body.appendChild(a);a.click();a.remove()};
+  job.acts.querySelector('.cp').onclick=async()=>{try{await navigator.clipboard.writeText(job.cap.value);toast('คัดลอกแล้ว')}catch(e){job.cap.select();toast('กดค้างแล้วเลือกคัดลอก')}};
+  job.acts.querySelector('.rt').onclick=()=>runJobs([job],true);
+}
+async function doJob(job){
+  try{
+    const raw=S.mode==='ai'?await genVideo(job.p,job):null;
+    if(stopFlag)throw new Error('หยุดแล้ว');
+    const out=await compose(job.p,raw,job);finishCard(job,out);
+  }catch(e){setJob(job,'ไม่สำเร็จ: '+e.message,'bad');job.acts.hidden=false;job.acts.querySelector('.sv').hidden=!job.blob;job.acts.querySelector('.cp').hidden=!job.blob;
+    job.acts.querySelector('.rt').onclick=()=>runJobs([job],true)}
+}
+async function runJobs(list,retry){
+  if(running)return toast('รอชุดเดิมเสร็จก่อนนะ');
+  running=true;stopFlag=false;updateRunBtn();$('#stopBtn').hidden=false;
+  let doneN=0;const q=[...list];const total=list.length;$('#prog').style.width='0%';
+  const conc=S.mode==='ai'?Math.max(1,Math.min(4,+S.conc||2)):1; // free mode records in real time, one at a time
+  await Promise.all(Array.from({length:conc},async()=>{while(q.length&&!stopFlag){const j=q.shift();await doJob(j);doneN++;$('#prog').style.width=(doneN/total*100)+'%'}}));
+  running=false;$('#stopBtn').hidden=true;updateRunBtn();
+  $('#zipBtn').hidden=!jobs.some(j=>j.blob);
+  if(!stopFlag&&!retry)toast('ทำครบทุกคลิปแล้ว');
+}
+$('#runBtn').onclick=()=>{
+  if(S.mode==='ai'&&!S.apiKey.trim()){toast('ใส่ Gemini API Key ในตั้งค่าก่อน หรือเลือกโหมดฟรี');$('#apiKey').focus();return}
+  $('#resCard').hidden=false;$('#results').innerHTML='';$('#zipBtn').hidden=true;
+  jobs=products.map(makeCard);$('#resCard').scrollIntoView({behavior:'smooth'});runJobs(jobs);
+};
+$('#stopBtn').onclick=()=>{stopFlag=true;toast('กำลังหยุด… งานที่ส่งไปแล้วอาจยังถูกคิดเงิน')};
+
+
+/* ---------- image editor: crop to 9:16 + paint-to-erase (local inpaint) ---------- */
+const E={};
+function openEditor(p){
+  E.p=p;const c=document.createElement('canvas');c.width=p.img.width;c.height=p.img.height;c.getContext('2d').drawImage(p.img,0,0);
+  E.work=c;E.mask=document.createElement('canvas');E.mask.width=c.width;E.mask.height=c.height;
+  E.zoom=1;E.ox=0;E.oy=0;E.tool='pan';E.undo=[];$('#edZoom').value=100;setTool('pan');$('#ed').hidden=false;edDraw();
+}
+function setTool(t){E.tool=t;$('#tPan').classList.toggle('on',t==='pan');$('#tBrush').classList.toggle('on',t==='brush')}
+$('#tPan').onclick=()=>setTool('pan');$('#tBrush').onclick=()=>setTool('brush');
+function edGeom(){const V=$('#edCanvas'),VW=V.width,VH=V.height,iw=E.work.width,ih=E.work.height;
+  const s=Math.max(VW/iw,VH/ih)*E.zoom;return {VW,VH,s,x0:(VW-iw*s)/2+E.ox,y0:(VH-ih*s)/2+E.oy}}
+function edDraw(){const V=$('#edCanvas'),ctx=V.getContext('2d'),g=edGeom();
+  ctx.fillStyle='#222';ctx.fillRect(0,0,g.VW,g.VH);
+  ctx.drawImage(E.work,g.x0,g.y0,E.work.width*g.s,E.work.height*g.s);
+  ctx.globalAlpha=.5;ctx.drawImage(E.mask,g.x0,g.y0,E.work.width*g.s,E.work.height*g.s);ctx.globalAlpha=1;}
+$('#edZoom').oninput=e=>{E.zoom=e.target.value/100;edDraw()};
+(()=>{const V=$('#edCanvas');let down=false,last=null;
+  const pos=e=>{const r=V.getBoundingClientRect();return {x:(e.clientX-r.left)*V.width/r.width,y:(e.clientY-r.top)*V.height/r.height}};
+  const paint=(a,b)=>{const g=edGeom(),m=E.mask.getContext('2d');m.strokeStyle=m.fillStyle='#ff3b30';m.lineCap='round';
+    m.lineWidth=(+$('#edBrush').value)/g.s*(V.width/300);const tx=q=>[(q.x-g.x0)/g.s,(q.y-g.y0)/g.s];
+    m.beginPath();m.moveTo(...tx(a));m.lineTo(...tx(b));m.stroke();edDraw()};
+  V.addEventListener('pointerdown',e=>{down=true;V.setPointerCapture(e.pointerId);last=pos(e);if(E.tool==='brush')paint(last,last)});
+  V.addEventListener('pointermove',e=>{if(!down)return;const q=pos(e);
+    if(E.tool==='pan'){E.ox+=q.x-last.x;E.oy+=q.y-last.y;edDraw()}else paint(last,q);last=q});
+  const up=()=>{down=false};V.addEventListener('pointerup',up);V.addEventListener('pointercancel',up);
+})();
+function inpaint(imgData,maskData){ // onion-peel fill from the edges inward, then smooth
+  const {width:w,height:h}=imgData,d=imgData.data,m=maskData.data;const n=w*h;
+  const hole=new Uint8Array(n);let left=0;for(let i=0;i<n;i++)if(m[i*4+3]>20){hole[i]=1;left++}
+  const holeIdx=[];for(let i=0;i<n;i++)if(hole[i])holeIdx.push(i);
+  let guard=0;
+  while(left>0&&guard++<4000){const fill=[];
+    for(const i of holeIdx){if(!hole[i])continue;const x=i%w,y=(i/w)|0;let r=0,g=0,b=0,c=0;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=w||yy>=h)continue;const j=yy*w+xx;if(hole[j])continue;
+        r+=d[j*4];g+=d[j*4+1];b+=d[j*4+2];c++}
+      if(c>=2||(c&&guard>50))fill.push([i,r/c,g/c,b/c])}
+    if(!fill.length)break;
+    for(const [i,r,g,b] of fill){d[i*4]=r;d[i*4+1]=g;d[i*4+2]=b;hole[i]=0;left--}}
+  for(let pass=0;pass<6;pass++)for(const i of holeIdx){const x=i%w,y=(i/w)|0;if(x<1||y<1||x>=w-1||y>=h-1)continue;
+    for(let k=0;k<3;k++)d[i*4+k]=(d[(i-1)*4+k]+d[(i+1)*4+k]+d[(i-w)*4+k]+d[(i+w)*4+k])/4}
+  for(const i of holeIdx){const nz=(Math.random()-.5)*6;for(let k=0;k<3;k++)d[i*4+k]=Math.max(0,Math.min(255,d[i*4+k]+nz))}
+  return imgData;
+}
+$('#edHeal').onclick=()=>{
+  const w=E.work.width,h=E.work.height,ctx=E.work.getContext('2d'),mctx=E.mask.getContext('2d');
+  const md=mctx.getImageData(0,0,w,h);let any=false;for(let i=3;i<md.data.length;i+=4)if(md.data[i]>20){any=true;break}
+  if(!any)return toast('ทาทับสติกเกอร์ก่อน แล้วค่อยกดลบ');
+  const id=ctx.getImageData(0,0,w,h);E.undo.push(ctx.getImageData(0,0,w,h));if(E.undo.length>6)E.undo.shift();
+  $('#edHeal').disabled=true;$('#edHeal').textContent='กำลังลบ…';
+  setTimeout(()=>{ctx.putImageData(inpaint(id,md),0,0);mctx.clearRect(0,0,w,h);edDraw();$('#edHeal').disabled=false;$('#edHeal').textContent='✨ ลบส่วนที่ทา'},30);
+};
+$('#edUndo').onclick=()=>{const u=E.undo.pop();if(u){E.work.getContext('2d').putImageData(u,0,0)}E.mask.getContext('2d').clearRect(0,0,E.mask.width,E.mask.height);edDraw()};
+$('#edCancel').onclick=()=>{$('#ed').hidden=true};
+$('#edDone').onclick=()=>{
+  const g=edGeom(),k=720/g.VW,out=document.createElement('canvas');out.width=720;out.height=1280;const o=out.getContext('2d');
+  o.fillStyle='#fff';o.fillRect(0,0,720,1280);o.drawImage(E.work,g.x0*k,g.y0*k,E.work.width*g.s*k,E.work.height*g.s*k);
+  const url=out.toDataURL('image/jpeg',.92),im=new Image();
+  im.onload=()=>{Object.assign(E.p,{url,b64:url.split(',')[1],img:im});$('#ed').hidden=true;renderProducts();drawPreview();toast('ใช้รูปที่แก้แล้ว')};im.src=url;
+};
+
+
+/* ---------- best-seller finder (reads Shopee search screenshots) ---------- */
+let shots=[],picks=[];
+$('#shotBtn').onclick=()=>$('#shotIn').click();
+$('#shotIn').onchange=async e=>{for(const f of e.target.files){shots.push(await loadImg(f))}e.target.value='';
+  $('#shotInfo').textContent=`เลือกแล้ว ${shots.length} รูป`;$('#anaBtn').disabled=!shots.length};
+const toNum=v=>{if(v==null)return null;if(typeof v==='number')return v;const t=String(v).replace(/[,\s+]/g,'');const m=parseFloat(t);if(isNaN(m))return null;
+  return /หมื่น/.test(t)?m*1e4:/แสน/.test(t)?m*1e5:/ล้าน/.test(t)?m*1e6:/พัน|k/i.test(t)?m*1e3:m};
+$('#anaBtn').onclick=async()=>{
+  const b=$('#anaBtn');b.disabled=true;b.textContent='กำลังอ่านหน้าจอ…';picks=[];$('#pickList').innerHTML='';$('#pickAdd').hidden=true;
+  try{
+    for(let i=0;i<shots.length;i+=maxImgs()){const chunk=shots.slice(i,i+maxImgs());
+      const out=await askJSON(`รูปที่แนบ (${chunk.length} รูป เรียงตามลำดับ เริ่มนับ 0) คือภาพหน้าจอผลค้นหาสินค้าในแอป Shopee ประเทศไทย
+อ่านสินค้าทุกชิ้นที่เห็นการ์ดครบ แล้วตอบเป็น JSON array อย่างเดียว แต่ละชิ้นเป็น
+{"shot":ลำดับรูป,"box":[ซ้าย,บน,ขวา,ล่าง] สัดส่วน 0–1 ของรูปนั้น ครอบเฉพาะภาพสินค้า (ไม่รวมชื่อและราคา),"name":"ชื่อสั้นไม่เกิน 4 คำ","price":"ราคาตามจอ","sold":"ยอดขายตามที่เห็น เช่น 1.2พัน","rating":ดาวถ้าเห็นเป็นตัวเลข ไม่งั้น null,"fit":1-10 ความเหมาะกับคลิปแต่งบ้านสไตล์มินิมอลสวย ๆ,"reason":"เหตุผลสั้น 1 ประโยค","headline":"พาดหัว 2 บรรทัดคั่น \\n บรรทัดละไม่เกิน 18 ตัวอักษร","caption":"แคปชัน 2–3 ประโยค ชวนกดตะกร้า ไม่ระบุราคา + แฮชแท็กไทย 5 อัน"}
+ห้ามเดาตัวเลขที่มองไม่เห็น ให้ใช้ null แทน ข้ามโฆษณาที่ไม่ใช่สินค้า`,chunk.map(x=>({b64:x.b64})));
+      (Array.isArray(out)?out:[]).forEach(o=>{const sh=chunk[+o.shot]||chunk[0];picks.push({...o,src:sh,soldN:toNum(o.sold)})});
+    }
+    if(!picks.length)throw new Error('ไม่เจอสินค้าในรูป ลองแคปให้เห็นการ์ดสินค้าชัด ๆ');
+    const maxS=Math.max(1,...picks.map(p=>p.soldN||0));
+    picks.forEach(p=>{p.score=Math.round(((p.soldN?Math.log10(p.soldN+1)/Math.log10(maxS+1):0)*6+(+p.fit||5)*.3+(p.rating?(p.rating-4)*2:0))*10)/10});
+    picks.sort((a,b)=>b.score-a.score);renderPicks();
+  }catch(e){toast('วิเคราะห์ไม่สำเร็จ: '+e.message)}
+  b.disabled=false;b.textContent='วิเคราะห์';
+};
+function cropPick(p,size){const im=p.src.img,bx=(p.box||[0,0,1,1]).map(Number);
+  let [l,t,r,bm]=bx;if(!(r>l&&bm>t)){l=0;t=0;r=1;bm=1}
+  const sx=l*im.width,sy=t*im.height,sw=(r-l)*im.width,sh=(bm-t)*im.height;
+  const c=document.createElement('canvas');const k=size?size/Math.max(sw,sh):Math.max(1,720/Math.max(sw,sh));c.width=Math.round(sw*k);c.height=Math.round(sh*k);
+  const x=c.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(im,sx,sy,sw,sh,0,0,c.width,c.height);return c}
+function renderPicks(){const L=$('#pickList');L.innerHTML='';
+  picks.forEach((p,i)=>{const d=document.createElement('div');d.className='pick';
+    d.innerHTML=`<input type="checkbox" ${i<10?'checked':''}><span></span><div><div class="pn" style="font-weight:600"></div><div class="note n1"></div><div class="note n2" style="font-size:13px"></div></div>`;
+    const cv=cropPick(p,128);cv.style.cssText='width:64px;height:64px;border-radius:10px;object-fit:cover';d.children[1].replaceWith(cv);
+    d.querySelector('.pn').innerHTML=`<span class="sc">${i+1}</span>`;d.querySelector('.pn').append(p.name||'สินค้า');
+    d.querySelector('.n1').textContent=[p.sold?`ขายแล้ว ${p.sold}`:'',p.rating?`★ ${p.rating}`:'',p.price||''].filter(Boolean).join(' · ');
+    d.querySelector('.n2').textContent=p.reason||'';
+    p.chk=d.querySelector('input');L.appendChild(d)});
+  $('#pickAdd').hidden=false;toast('จัดอันดับแล้ว ติ๊กเลือก 10 อันดับแรกไว้ให้');
+}
+$('#pickAdd').onclick=async()=>{let n=0;
+  for(const p of picks){if(!p.chk?.checked)continue;const c=cropPick(p);const url=c.toDataURL('image/jpeg',.92);
+    const img=await new Promise(r=>{const im=new Image();im.onload=()=>r(im);im.src=url});
+    products.push({id:Math.random().toString(36).slice(2),name:p.name||'',headline:(p.headline||'').replace(/\\n/g,'\n'),caption:p.caption||'',b64:url.split(',')[1],url,img});n++}
+  renderProducts();onChange();toast(`เพิ่ม ${n} สินค้าแล้ว รูปจากหน้าค้นหาจะเล็ก ถ้าอยากให้คมชัด กดครอปแล้วเปลี่ยนเป็นรูปใหญ่จากหน้าสินค้า`);
+  document.querySelector('#prodList').scrollIntoView({behavior:'smooth'})};
+
+/* ---------- zip all clips ---------- */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0};
+function makeZip(files){const enc=new TextEncoder(),parts=[],central=[];let off=0;
+  for(const f of files){const nm=enc.encode(f.name),d=f.data,crc=crc32(d);
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint32(14,crc,true);h.setUint32(18,d.length,true);h.setUint32(22,d.length,true);h.setUint16(26,nm.length,true);
+    parts.push(new Uint8Array(h.buffer),nm,d);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint32(16,crc,true);c.setUint32(20,d.length,true);c.setUint32(24,d.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+d.length}
+  const csz=central.reduce((a,x)=>a+x.length,0);const e=new DataView(new ArrayBuffer(22));e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,csz,true);e.setUint32(16,off,true);
+  return new Blob([...parts,...central,new Uint8Array(e.buffer)],{type:'application/zip'})}
+$('#zipBtn').onclick=async()=>{const done=jobs.filter(j=>j.blob);if(!done.length)return toast('ยังไม่มีคลิปที่เสร็จ');
+  const files=[],used={};let caps='';
+  for(const [i,j] of done.entries()){let base=`${String(i+1).padStart(2,'0')}-${(j.p.name||'clip').replace(/[\\/:*?"<>|]/g,'')}`;
+    files.push({name:`${base}.${extOf(j.blob)}`,data:new Uint8Array(await j.blob.arrayBuffer())});caps+=`=== ${base} ===\n${j.cap.value}\n\n`}
+  files.push({name:'แคปชันทั้งหมด.txt',data:new TextEncoder().encode(caps)});
+  const zip=makeZip(files),fname=`คลิปปักตะกร้า-${done.length}คลิป.zip`;
+  if(DL){try{await DL.save({filename:fname,data:zip});toast('บันทึกแล้ว')}catch(e){if(e&&e.code!=='declined')toast('บันทึกไม่ได้: '+(e.message||e.code))}return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(zip);a.download=fname;document.body.appendChild(a);a.click();a.remove()};
+
+
+/* ---------- audio: decode, generated music, mix, codec ---------- */
+let CUSTOM_MUSIC=null;
+async function decodeAudio(file){const buf=await file.arrayBuffer();const oc=new OfflineAudioContext(2,48000,48000);
+  return await new Promise((res,rej)=>{const pr=oc.decodeAudioData(buf,res,rej);if(pr&&pr.then)pr.then(res,rej)})}
+$('#musicIn').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{CUSTOM_MUSIC=await decodeAudio(f);toast('ใส่เพลงแล้ว')}catch(err){toast('เปิดไฟล์เพลงนี้ไม่ได้')}onChange()};
+async function pickAudioCodec(){if(!window.AudioEncoder||!window.AudioData)return null;
+  for(const [codec,mux] of [['mp4a.40.2','aac'],['opus','opus']]){const cfg={codec,sampleRate:48000,numberOfChannels:2,bitrate:128000};
+    try{if((await AudioEncoder.isConfigSupported(cfg)).supported)return {cfg,mux}}catch(e){}}return null}
+const mf=m=>440*Math.pow(2,(m-69)/12);
+const STYLES={
+  warm:{bpm:78,chords:[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]],arp:'8',kick:[0,2],hat:false,wave:'triangle',cut:1400},
+  bright:{bpm:112,chords:[[48,52,55,60],[43,47,50,55],[45,48,52,57],[41,45,48,53]],arp:'16',kick:[0,1,2,3],hat:true,wave:'triangle',cut:2600},
+  calm:{bpm:60,chords:[[50,54,57,61,64],[43,47,50,54,59],[47,50,54,57,62],[43,47,50,54,57]],arp:'bell',kick:[],hat:false,wave:'sine',cut:1000}
+};
+async function renderMusic(style,dur,seed){
+  const st=STYLES[style];const sr=48000,len=Math.ceil(sr*dur);const oc=new OfflineAudioContext(2,len,sr);
+  let rnd=seed||Math.random()*1e6;const rand=()=>{rnd=(rnd*9301+49297)%233280;return rnd/233280};
+  const master=oc.createGain();master.gain.value=1.1;const comp=oc.createDynamicsCompressor();master.connect(comp);comp.connect(oc.destination);
+  const conv=oc.createConvolver();const ir=oc.createBuffer(2,sr*2.2,sr);for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3)}
+  conv.buffer=ir;const wet=oc.createGain();wet.gain.value=.35;conv.connect(wet);wet.connect(master);
+  const tone=(m,t,l,type,g,cut,rev=true)=>{if(t>dur)return;const o=oc.createOscillator(),e=oc.createGain(),f=oc.createBiquadFilter();o.type=type;o.frequency.value=mf(m);
+    f.type='lowpass';f.frequency.value=cut;o.connect(f);f.connect(e);e.connect(master);if(rev)e.connect(conv);
+    const a=Math.min(.4,l*.3);e.gain.setValueAtTime(0,t);e.gain.linearRampToValueAtTime(g,t+a);e.gain.setTargetAtTime(0,t+l*.6,l*.25);o.start(t);o.stop(t+l*1.6)};
+  const beat=60/st.bpm,bar=beat*4;const transpose=Math.floor(rand()*5)-2;
+  for(let b=0,t=0;t<dur;b++,t+=bar){const ch=st.chords[b%st.chords.length].map(x=>x+transpose);
+    ch.forEach(m=>{tone(m,t,bar*1.05,st.wave,.05,st.cut);tone(m+.08,t,bar*1.05,'sine',.03,st.cut)});
+    tone(ch[0]-12,t,bar*.95,'sine',.12,600,false);
+    if(st.arp==='8'||st.arp==='16'){const step=st.arp==='8'?beat/2:beat/4;const notes=[...ch,ch[1]+12,ch[2]+12];
+      for(let k=0;k*step<bar-1e-6;k++){if(st.arp==='16'&&rand()<.25)continue;tone(notes[(k*(st.arp==='8'?1:3))%notes.length]+12,t+k*step,step*1.6,'sine',st.arp==='8'?.05:.04,4000)}}
+    else{for(let k=0;k<3;k++){if(rand()<.35)continue;const m=ch[Math.floor(rand()*ch.length)]+24;tone(m,t+k*beat*1.33+rand()*.2,beat*2.5,'sine',.045,5000)}}
+    st.kick.forEach(q=>{const tt=t+q*beat;if(tt>dur)return;const o=oc.createOscillator(),e=oc.createGain();o.frequency.setValueAtTime(120,tt);o.frequency.exponentialRampToValueAtTime(45,tt+.12);
+      e.gain.setValueAtTime(.25,tt);e.gain.exponentialRampToValueAtTime(.001,tt+.3);o.connect(e);e.connect(master);o.start(tt);o.stop(tt+.35)});
+    if(st.hat){const nb=oc.createBuffer(1,sr*.05,sr),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+      for(let q=0;q<4;q++){const tt=t+q*beat+beat/2;if(tt>dur)break;const n=oc.createBufferSource(),hp=oc.createBiquadFilter(),e=oc.createGain();n.buffer=nb;hp.type='highpass';hp.frequency.value=7000;
+        e.gain.setValueAtTime(.06,tt);e.gain.exponentialRampToValueAtTime(.001,tt+.05);n.connect(hp);hp.connect(e);e.connect(master);n.start(tt)}}
+  }
+  master.gain.setValueAtTime(1.1,Math.max(0,dur-1.2));master.gain.linearRampToValueAtTime(0,dur);
+  return await oc.startRendering();
+}
+async function buildAudio(p,baseDur){
+  const hasMusic=S.music!=='none'&&!(S.music==='custom'&&!CUSTOM_MUSIC)&&(+S.musicVol>0);const voice=p.voiceBuf;
+  if(!hasMusic&&!voice)return null;
+  const dur=Math.min(60,Math.max(baseDur,voice?voice.duration+0.9:0));const sr=48000;
+  const oc=new OfflineAudioContext(2,Math.ceil(sr*dur),sr);
+  if(hasMusic){const mb=S.music==='custom'?CUSTOM_MUSIC:await renderMusic(S.music,dur);
+    const src=oc.createBufferSource();src.buffer=mb;src.loop=mb.duration<dur;const g=oc.createGain();
+    const v=(+S.musicVol/100)*(S.music==='custom'?.8:1);g.gain.setValueAtTime(v,0);
+    if(voice){g.gain.setValueAtTime(v,.2);g.gain.linearRampToValueAtTime(v*.28,.45);g.gain.setValueAtTime(v*.28,.45+voice.duration);g.gain.linearRampToValueAtTime(v,.8+voice.duration)}
+    g.gain.setValueAtTime(g.gain.value,Math.max(0,dur-1));g.gain.linearRampToValueAtTime(0,dur);src.connect(g);g.connect(oc.destination);src.start(0)}
+  if(voice){const vs=oc.createBufferSource();vs.buffer=voice;const vg=oc.createGain();vg.gain.value=1.15;vs.connect(vg);vg.connect(oc.destination);vs.start(.45)}
+  return {buf:await oc.startRendering(),dur};
+}
+let prevCtx=null,prevSrc=null;
+$('#musicPrev').onclick=async()=>{
+  try{if(prevSrc){prevSrc.stop();prevSrc=null;$('#musicPrev').textContent='▶︎ ฟังตัวอย่างเพลง';return}
+    if(S.music==='none')return toast('เลือกเพลงก่อนนะ');if(S.music==='custom'&&!CUSTOM_MUSIC)return toast('เลือกไฟล์เพลงก่อน');
+    prevCtx=prevCtx||new AudioContext();await prevCtx.resume();$('#musicPrev').textContent='กำลังแต่งเพลง…';
+    const b=S.music==='custom'?CUSTOM_MUSIC:await renderMusic(S.music,10);
+    prevSrc=prevCtx.createBufferSource();prevSrc.buffer=b;const g=prevCtx.createGain();g.gain.value=+S.musicVol/100;prevSrc.connect(g);g.connect(prevCtx.destination);
+    prevSrc.onended=()=>{prevSrc=null;$('#musicPrev').textContent='▶︎ ฟังตัวอย่างเพลง'};prevSrc.start();$('#musicPrev').textContent='■ หยุด';
+  }catch(e){toast('เล่นเสียงไม่ได้: '+e.message);$('#musicPrev').textContent='▶︎ ฟังตัวอย่างเพลง'}};
+$('#scriptBtn').onclick=async()=>{
+  if(!products.length)return toast('เพิ่มรูปสินค้าก่อนนะ');if(!SAMPLE&&!S.apiKey.trim())return toast('ใส่ Gemini API Key ในตั้งค่าก่อน');
+  const b=$('#scriptBtn');b.disabled=true;b.textContent='กำลังเขียนบท…';
+  try{for(let i=0;i<products.length;i+=maxImgs()){const chunk=products.slice(i,i+maxImgs());
+      const out=await askJSON(`เขียนบทพากย์ภาษาไทยสำหรับคลิปขายของสั้นแนวตั้ง สไตล์มินิมอล น้ำเสียงเป็นกันเอง อบอุ่น เหมือนเพื่อนแนะนำของดี แนบรูปสินค้าเรียงตามลำดับ
+แต่ละชิ้นให้บทยาว 2–3 ประโยค อ่านจบใน 7–10 วินาที ภาษาพูดเป็นธรรมชาติ ภาษาไทยถูกต้อง ปิดท้ายชวนกดตะกร้า ห้ามอวดอ้างเกินจริง ห้ามบอกราคา
+ตอบเป็น JSON array อย่างเดียว เช่น [{"script":"..."}]
+ชื่อสินค้า: ${chunk.map((p,k)=>`${k+1}. ${p.name||'(ดูจากรูป)'}`).join(' ')}`,chunk.map(p=>({b64:p.b64})));
+      chunk.forEach((p,k)=>{if(out[k]?.script)p.script=out[k].script})}
+    renderProducts();toast('เขียนบทเสร็จแล้ว อ่านอัดเสียงแล้วแนบได้เลย')}
+  catch(e){toast('เขียนไม่สำเร็จ: '+e.message)}
+  b.disabled=false;b.textContent='✍️ ให้ AI เขียนบทพากย์'};
+
+/* ---------- init ---------- */
+chips($('#modeChips'),MODES,'mode');chips($('#sceneChips'),SCENES,'scene');chips($('#motionChips'),MOTIONS,'motion');
+chips($('#fontChips'),FONTS,'font','fontchip');chips($('#subjectChips'),SUBJECTS,'subject');chips($('#lenChips'),LENS,'clipLen');chips($('#musicChips'),MUSICS,'music');chips($('#colorChips'),COLORS,'color');chips($('#posChips'),POS,'pos');
+[['apiKey','value'],['videoModel','value'],['textModel','value'],['res','value'],['conc','value'],['extra','value'],['size','value'],['sparkle','checked'],['noWm','checked'],['musicVol','value']].forEach(([id,prop])=>{
+  const el=$('#'+id);el[prop]=S[id];el.addEventListener('input',()=>{S[id]=prop==='checked'?el.checked:el.value;if(id==='size')S.size=+el.value;save();drawPreview()})});
+renderProducts();onChange();document.fonts.ready.then(drawPreview);
+</script>
+</body>
+</html>
