@@ -278,8 +278,8 @@ function renderProducts(){
     d.innerHTML=`<img alt=""><div><button class="x">ลบ</button><button class="btn small ghost ed" style="margin-bottom:4px">✂︎ ครอป / ลบสติกเกอร์</button>
       <label class="f" style="margin-top:0">ชื่อสินค้า (สั้น ๆ)</label><input type="text" class="nm" placeholder="เช่น ก้านไม้หอม">
       <label class="f">พาดหัวบนคลิป</label><textarea class="hl" rows="2" placeholder="เช่น ก้านไม้หอม&#10;กลิ่นหอมผ่อนคลาย"></textarea>
-      <label class="f">บทพากย์ (ไว้อ่านอัดเสียง)</label><textarea class="scr" rows="2" placeholder="กด ✍️ ให้ AI เขียน หรือพิมพ์เอง"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><button class="btn small ghost vb">🎙 แนบเสียงพากย์</button><span class="note vn"></span><button class="btn small ghost vx" hidden>ลบเสียง</button></div>
+      <label class="f">บทพากย์ (ไว้อ่านอัดเสียง)</label><textarea class="scr" rows="2" placeholder="กดปุ่ม ✍️ เขียนบท ด้านล่างให้ AI เขียน หรือพิมพ์เอง"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap"><button class="btn small ghost sb">✍️ เขียนบท</button><button class="btn small ghost vb">🎙 แนบเสียงพากย์</button><span class="note vn"></span><button class="btn small ghost vx" hidden>ลบเสียง</button></div>
       <input type="file" class="vin" accept="audio/*" hidden></div>`;
     d.querySelector('img').src=p.url;
     const nm=d.querySelector('.nm'),hl=d.querySelector('.hl');nm.value=p.name;hl.value=p.headline;
@@ -287,6 +287,9 @@ function renderProducts(){
     const scr=d.querySelector('.scr');scr.value=p.script||'';scr.oninput=()=>p.script=scr.value;
     const vn=d.querySelector('.vn'),vx=d.querySelector('.vx'),vin=d.querySelector('.vin');
     const showV=()=>{vn.textContent=p.voiceBuf?`มีเสียงแล้ว ${p.voiceBuf.duration.toFixed(1)} วิ`:'';vx.hidden=!p.voiceBuf};showV();
+    const sb=d.querySelector('.sb');sb.hidden=IN_ART&&!SAMPLE;
+    sb.onclick=()=>{if(!SAMPLE&&!S.apiKey.trim())return toast('ใส่ Gemini API Key ในตั้งค่าก่อน');
+      aiRun(sb,'กำลังเขียน…',async()=>{await genScripts([p]);scr.value=p.script||'';toast('เขียนบทเสร็จแล้ว')})};
     d.querySelector('.vb').onclick=()=>vin.click();
     vin.onchange=async()=>{const f=vin.files[0];vin.value='';if(!f)return;vn.textContent='กำลังอ่านไฟล์เสียง…';
       try{p.voiceBuf=await decodeAudio(f);if(p.voiceBuf.duration>59)toast('เสียงยาวเกิน 59 วิ จะถูกตัดท้าย');}catch(e){toast('เปิดไฟล์เสียงนี้ไม่ได้ ลองไฟล์ .m4a หรือ .mp3');p.voiceBuf=null}showV()};
@@ -377,16 +380,30 @@ async function genVideo(p,job){
   }
   throw new Error('รูปแบบวิดีโอที่ได้ไม่รู้จัก');
 }
-async function askJSON(prompt,imgs){ // imgs: [{b64,mime}]
+let AI_CTL=null,AI_BTN=null;
+async function aiRun(btn,busy,fn){
+  if(AI_CTL){if(AI_BTN===btn)AI_CTL.abort();else toast('รองานก่อนหน้าเสร็จก่อนนะ');return}
+  const idle=btn.textContent;AI_CTL=new AbortController();AI_BTN=btn;btn.textContent=busy+'  ■ แตะเพื่อหยุด';
+  const hint=setTimeout(()=>{if(AI_CTL)toast(SAMPLE?'ถ้ามีหน้าต่างขออนุญาตใช้ Claude ให้กด “อนุญาต” ก่อนนะ':'ยังทำงานอยู่ รออีกนิด')},5000);
+  try{await fn()}catch(e){toast(/หยุด/.test(e.message)?'หยุดแล้ว':'ไม่สำเร็จ: '+e.message)}
+  finally{clearTimeout(hint);AI_CTL=null;AI_BTN=null;btn.textContent=idle;btn.disabled=false}
+}
+function thumb(p){if(p._th)return p._th;const im=p.img,k=Math.min(1,512/Math.max(im.width,im.height)),c=document.createElement('canvas');
+  c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+  return p._th={b64:c.toDataURL('image/jpeg',.8).split(',')[1]}}
+async function askJSON(prompt,imgs,opt={}){ // imgs: [{b64,mime}]; opt.tier quick|default
+  const sig=AI_CTL?.signal;
   if(SAMPLE){
     const blobs=imgs.map(x=>{const bin=atob(x.b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type:x.mime||'image/jpeg'})});
-    try{return await SAMPLE.json(prompt,blobs.length?{images:blobs,cache:false}:{cache:false})}
-    catch(e){const m={not_granted:'ยังไม่ได้อนุญาตให้ใช้ Claude',rate_limited:'ใช้งานถี่เกินไปหรือโควตาเต็ม ลองใหม่อีกสักพัก',invalid_json:'อ่านคำตอบไม่ได้ ลองกดใหม่',image_rejected:'รูปบางรูปใช้ไม่ได้'};throw new Error(m[e.code]||e.message||e.code)}
+    try{return await SAMPLE.json(prompt,{...(blobs.length?{images:blobs}:{}),cache:false,modelTier:opt.tier||'quick',...(sig?{signal:sig}:{})})}
+    catch(e){if(e.code==='cancelled')throw new Error('หยุดแล้ว');const m={not_granted:'ยังไม่ได้อนุญาตให้ใช้ Claude',rate_limited:'ใช้งานถี่เกินไปหรือโควตาเต็ม ลองใหม่อีกสักพัก',invalid_json:'อ่านคำตอบไม่ได้ ลองกดใหม่',image_rejected:'รูปบางรูปใช้ไม่ได้'};throw new Error(m[e.code]||e.message||e.code)}
   }
   if(!S.apiKey.trim())throw new Error('ใส่ Gemini API Key ในตั้งค่าก่อน');
   const parts=[{text:prompt},...imgs.map(x=>({inline_data:{mime_type:x.mime||'image/jpeg',data:x.b64}}))];
-  const r=await fetch(`${API}/models/${encodeURIComponent(S.textModel.trim())}:generateContent`,{method:'POST',headers:hdr(),
-    body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseMimeType:'application/json',temperature:.7}})});
+  const tc=new AbortController();const tm=setTimeout(()=>tc.abort(),90000);sig&&sig.addEventListener('abort',()=>tc.abort());
+  let r;try{r=await fetch(`${API}/models/${encodeURIComponent(S.textModel.trim())}:generateContent`,{method:'POST',headers:hdr(),signal:tc.signal,
+    body:JSON.stringify({contents:[{role:'user',parts}],generationConfig:{responseMimeType:'application/json',temperature:.7}})})}
+  catch(e){throw new Error(sig?.aborted?'หยุดแล้ว':'ใช้เวลานานเกินไปหรือเชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง')}finally{clearTimeout(tm)}
   if(!r.ok)throw new Error(await errText(r));
   const j=await r.json();const txt=j.candidates?.[0]?.content?.parts?.map(x=>x.text||'').join('')||'[]';
   return JSON.parse(txt.replace(/^\s*```(json)?|```\s*$/g,''));
@@ -399,17 +416,14 @@ async function genTexts(list){
 - headline: พาดหัวบนคลิป 2 บรรทัด คั่นด้วย \\n แต่ละบรรทัดไม่เกิน 18 ตัวอักษร ไม่ใช้อีโมจิ
 - caption: แคปชันโพสต์ 2–3 ประโยค ชวนกดตะกร้า ไม่อวดอ้างเกินจริง ไม่ระบุราคา ตามด้วยแฮชแท็กไทย 5 อัน
 ตอบเป็น JSON array อย่างเดียว เรียงตามลำดับ เช่น [{"name":"...","headline":"...\\n...","caption":"..."}]
-สินค้า:\n${items}`,list.map(p=>({b64:p.b64})));
+สินค้า:\n${items}`,list.map(thumb));
 }
 $('#aiTextBtn').onclick=async()=>{
   if(!products.length)return toast('เพิ่มรูปสินค้าก่อนนะ');
   if(!SAMPLE&&!S.apiKey.trim())return toast('ใส่ Gemini API Key ในตั้งค่าก่อน');
-  const b=$('#aiTextBtn');b.disabled=true;b.textContent='กำลังคิด…';
-  try{for(let i=0;i<products.length;i+=maxImgs()){const chunk=products.slice(i,i+maxImgs());const out=await genTexts(chunk);
+  aiRun($('#aiTextBtn'),'กำลังคิด…',async()=>{for(let i=0;i<products.length;i+=maxImgs()){const chunk=products.slice(i,i+maxImgs());const out=await genTexts(chunk);
       chunk.forEach((p,k)=>{const o=out[k];if(!o)return;if(!p.name)p.name=o.name||'';if(!p.headline)p.headline=(o.headline||'').replace(/\\n/g,'\n');p.caption=o.caption||''})}
-    renderProducts();drawPreview();toast('เขียนเสร็จแล้ว แก้ต่อได้ตามใจ')}
-  catch(e){toast('เขียนไม่สำเร็จ: '+e.message)}
-  b.disabled=false;b.textContent='✨ ให้ AI คิดพาดหัวและแคปชัน';
+    renderProducts();drawPreview();toast('เขียนเสร็จแล้ว แก้ต่อได้ตามใจ')});
 };
 const fallbackCaption=p=>`${p.name||'ของดีติดบ้าน'} ดีไซน์มินิมอล เข้ากับทุกมุมของบ้าน ใครชอบสไตล์เรียบละมุนต้องมีติดไว้สักชิ้น กดตะกร้าดูรายละเอียดได้เลย 🧺\n#ของแต่งบ้าน #มินิมอล #ของมันต้องมี #ช้อปปี้ #ปักตะกร้า`;
 
@@ -600,21 +614,20 @@ $('#shotIn').onchange=async e=>{for(const f of e.target.files){shots.push(await 
 const toNum=v=>{if(v==null)return null;if(typeof v==='number')return v;const t=String(v).replace(/[,\s+]/g,'');const m=parseFloat(t);if(isNaN(m))return null;
   return /หมื่น/.test(t)?m*1e4:/แสน/.test(t)?m*1e5:/ล้าน/.test(t)?m*1e6:/พัน|k/i.test(t)?m*1e3:m};
 $('#anaBtn').onclick=async()=>{
-  const b=$('#anaBtn');b.disabled=true;b.textContent='กำลังอ่านหน้าจอ…';picks=[];$('#pickList').innerHTML='';$('#pickAdd').hidden=true;
-  try{
+  picks=[];$('#pickList').innerHTML='';$('#pickAdd').hidden=true;
+  aiRun($('#anaBtn'),'กำลังอ่านหน้าจอ…',async()=>{
     for(let i=0;i<shots.length;i+=maxImgs()){const chunk=shots.slice(i,i+maxImgs());
       const out=await askJSON(`รูปที่แนบ (${chunk.length} รูป เรียงตามลำดับ เริ่มนับ 0) คือภาพหน้าจอผลค้นหาสินค้าในแอป Shopee ประเทศไทย
 อ่านสินค้าทุกชิ้นที่เห็นการ์ดครบ แล้วตอบเป็น JSON array อย่างเดียว แต่ละชิ้นเป็น
 {"shot":ลำดับรูป,"box":[ซ้าย,บน,ขวา,ล่าง] สัดส่วน 0–1 ของรูปนั้น ครอบเฉพาะภาพสินค้า (ไม่รวมชื่อและราคา),"name":"ชื่อสั้นไม่เกิน 4 คำ","price":"ราคาตามจอ","sold":"ยอดขายตามที่เห็น เช่น 1.2พัน","rating":ดาวถ้าเห็นเป็นตัวเลข ไม่งั้น null,"fit":1-10 ความเหมาะกับคลิปแต่งบ้านสไตล์มินิมอลสวย ๆ,"reason":"เหตุผลสั้น 1 ประโยค","headline":"พาดหัว 2 บรรทัดคั่น \\n บรรทัดละไม่เกิน 18 ตัวอักษร","caption":"แคปชัน 2–3 ประโยค ชวนกดตะกร้า ไม่ระบุราคา + แฮชแท็กไทย 5 อัน"}
-ห้ามเดาตัวเลขที่มองไม่เห็น ให้ใช้ null แทน ข้ามโฆษณาที่ไม่ใช่สินค้า`,chunk.map(x=>({b64:x.b64})));
+ห้ามเดาตัวเลขที่มองไม่เห็น ให้ใช้ null แทน ข้ามโฆษณาที่ไม่ใช่สินค้า`,chunk.map(x=>({b64:x.b64})),{tier:'default'});
       (Array.isArray(out)?out:[]).forEach(o=>{const sh=chunk[+o.shot]||chunk[0];picks.push({...o,src:sh,soldN:toNum(o.sold)})});
     }
     if(!picks.length)throw new Error('ไม่เจอสินค้าในรูป ลองแคปให้เห็นการ์ดสินค้าชัด ๆ');
     const maxS=Math.max(1,...picks.map(p=>p.soldN||0));
     picks.forEach(p=>{p.score=Math.round(((p.soldN?Math.log10(p.soldN+1)/Math.log10(maxS+1):0)*6+(+p.fit||5)*.3+(p.rating?(p.rating-4)*2:0))*10)/10});
     picks.sort((a,b)=>b.score-a.score);renderPicks();
-  }catch(e){toast('วิเคราะห์ไม่สำเร็จ: '+e.message)}
-  b.disabled=false;b.textContent='วิเคราะห์';
+  });
 };
 function cropPick(p,size){const im=p.src.img,bx=(p.box||[0,0,1,1]).map(Number);
   let [l,t,r,bm]=bx;if(!(r>l&&bm>t)){l=0;t=0;r=1;bm=1}
@@ -721,18 +734,18 @@ $('#musicPrev').onclick=async()=>{
     prevSrc=prevCtx.createBufferSource();prevSrc.buffer=b;const g=prevCtx.createGain();g.gain.value=+S.musicVol/100;prevSrc.connect(g);g.connect(prevCtx.destination);
     prevSrc.onended=()=>{prevSrc=null;$('#musicPrev').textContent='▶︎ ฟังตัวอย่างเพลง'};prevSrc.start();$('#musicPrev').textContent='■ หยุด';
   }catch(e){toast('เล่นเสียงไม่ได้: '+e.message);$('#musicPrev').textContent='▶︎ ฟังตัวอย่างเพลง'}};
-$('#scriptBtn').onclick=async()=>{
-  if(!products.length)return toast('เพิ่มรูปสินค้าก่อนนะ');if(!SAMPLE&&!S.apiKey.trim())return toast('ใส่ Gemini API Key ในตั้งค่าก่อน');
-  const b=$('#scriptBtn');b.disabled=true;b.textContent='กำลังเขียนบท…';
-  try{for(let i=0;i<products.length;i+=maxImgs()){const chunk=products.slice(i,i+maxImgs());
+async function genScripts(list){
+for(let i=0;i<list.length;i+=maxImgs()){const chunk=list.slice(i,i+maxImgs());
       const out=await askJSON(`เขียนบทพากย์ภาษาไทยสำหรับคลิปขายของสั้นแนวตั้ง สไตล์มินิมอล น้ำเสียงเป็นกันเอง อบอุ่น เหมือนเพื่อนแนะนำของดี แนบรูปสินค้าเรียงตามลำดับ
 แต่ละชิ้นให้บทยาว 2–3 ประโยค อ่านจบใน 7–10 วินาที ภาษาพูดเป็นธรรมชาติ ภาษาไทยถูกต้อง ปิดท้ายชวนกดตะกร้า ห้ามอวดอ้างเกินจริง ห้ามบอกราคา
 ตอบเป็น JSON array อย่างเดียว เช่น [{"script":"..."}]
-ชื่อสินค้า: ${chunk.map((p,k)=>`${k+1}. ${p.name||'(ดูจากรูป)'}`).join(' ')}`,chunk.map(p=>({b64:p.b64})));
-      chunk.forEach((p,k)=>{if(out[k]?.script)p.script=out[k].script})}
-    renderProducts();toast('เขียนบทเสร็จแล้ว อ่านอัดเสียงแล้วแนบได้เลย')}
-  catch(e){toast('เขียนไม่สำเร็จ: '+e.message)}
-  b.disabled=false;b.textContent='✍️ ให้ AI เขียนบทพากย์'};
+ชื่อสินค้า: ${chunk.map((p,k)=>`${k+1}. ${p.name||'(ดูจากรูป)'}`).join(' ')}`,chunk.map(thumb));
+      chunk.forEach((p,k)=>{if(out[k]?.script)p.script=out[k].script});if(list.length>1)renderProducts()}
+}
+$('#scriptBtn').onclick=async()=>{
+  if(!products.length)return toast('เพิ่มรูปสินค้าก่อนนะ');if(!SAMPLE&&!S.apiKey.trim())return toast('ใส่ Gemini API Key ในตั้งค่าก่อน');
+  aiRun($('#scriptBtn'),'กำลังเขียนบท…',async()=>{await genScripts(products);
+    renderProducts();toast('เขียนบทเสร็จแล้ว อ่านอัดเสียงแล้วแนบได้เลย')})};
 
 /* ---------- init ---------- */
 chips($('#modeChips'),MODES,'mode');chips($('#sceneChips'),SCENES,'scene');chips($('#motionChips'),MOTIONS,'motion');
